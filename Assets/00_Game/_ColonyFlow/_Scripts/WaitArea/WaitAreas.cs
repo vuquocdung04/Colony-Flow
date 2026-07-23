@@ -13,6 +13,47 @@ public class WaitAreas : MonoBehaviour
 
     private Transform Holder => holder != null ? holder : transform;
 
+    private Anthill[] _occupants;
+
+    public bool TryPlace(Anthill anthill, out Vector3 slotPosition)
+    {
+        slotPosition = Vector3.zero;
+        if (anthill == null) return false;
+
+        Transform parent = Holder;
+        EnsureOccupants(parent.childCount);
+
+        for (int i = 0; i < _occupants.Length; i++)
+        {
+            if (_occupants[i] != null) continue;
+
+            _occupants[i] = anthill;
+            slotPosition = parent.GetChild(i).position;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void Release(Anthill anthill)
+    {
+        if (_occupants == null) return;
+
+        for (int i = 0; i < _occupants.Length; i++)
+            if (_occupants[i] == anthill) _occupants[i] = null;
+    }
+
+    private void EnsureOccupants(int count)
+    {
+        if (_occupants != null && _occupants.Length == count) return;
+
+        Anthill[] next = new Anthill[count];
+        if (_occupants != null)
+            for (int i = 0; i < _occupants.Length && i < count; i++) next[i] = _occupants[i];
+
+        _occupants = next;
+    }
+
     [Button(ButtonSizes.Large), GUIColor(0.4f, 0.8f, 1f)]
     public void Generate()
     {
@@ -31,6 +72,8 @@ public class WaitAreas : MonoBehaviour
             slot.transform.localRotation = Quaternion.identity;
             slot.transform.localScale = slotPrefab.transform.localScale;
         }
+
+        _occupants = new Anthill[slotCount];
     }
 
     [Button(ButtonSizes.Medium)]
@@ -43,6 +86,8 @@ public class WaitAreas : MonoBehaviour
             if (Application.isPlaying) Destroy(child);
             else DestroyImmediate(child);
         }
+
+        _occupants = null;
     }
 
     private GameObject InstantiateSlot()

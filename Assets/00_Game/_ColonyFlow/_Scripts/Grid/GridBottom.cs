@@ -35,7 +35,7 @@ public class GridBottom : MonoBehaviour
     public int CapacityAt(int index) =>
         _capacity != null && index >= 0 && index < _capacity.Length ? _capacity[index] : 0;
 
-    public void Load(BottomGridData data)
+    public void Load(BottomGridData data, GridTop gridTop, WaitAreas waitAreas)
     {
         Clear();
         if (data == null) return;
@@ -53,7 +53,6 @@ public class GridBottom : MonoBehaviour
         foreach (KeyValuePair<string, Dictionary<int, int>> pair in data.colors)
         {
             if (pair.Value == null) continue;
-            Color color = ColonyPalette.ToColor(pair.Key);
 
             foreach (KeyValuePair<int, int> slot in pair.Value)
             {
@@ -61,7 +60,7 @@ public class GridBottom : MonoBehaviour
                 if (index < 0 || index >= _slots.Length || _slots[index] != null) continue;
 
                 Anthill item = Instantiate(anthill, SlotCenter(index, cell), rotation, Holder);
-                item.SetColor(color);
+                item.Setup(pair.Key, slot.Value, gridTop, waitAreas);
                 _slots[index] = item;
                 _capacity[index] = slot.Value;
             }
@@ -97,7 +96,7 @@ public class GridBottom : MonoBehaviour
             0f,
             -y * (cell.z + spacingZ));
 
-        return transform.TransformPoint(local);
+        return Holder.TransformPoint(local);
     }
 
     void OnDrawGizmos()
@@ -106,7 +105,7 @@ public class GridBottom : MonoBehaviour
 
         Vector3 cell = CellSize;
         Vector3 size = new Vector3(cell.x, 0f, cell.z);
-        Vector3 scale = transform.lossyScale;
+        Vector3 scale = Holder.lossyScale;
 
         Matrix4x4 previousMatrix = Gizmos.matrix;
         Color previousColor = Gizmos.color;
@@ -116,16 +115,16 @@ public class GridBottom : MonoBehaviour
         {
             for (int x = 0; x < gridX; x++)
             {
-                Gizmos.matrix = Matrix4x4.TRS(CellCenter(x, y, cell), transform.rotation, scale);
+                Gizmos.matrix = Matrix4x4.TRS(CellCenter(x, y, cell), Holder.rotation, scale);
                 Gizmos.DrawWireCube(Vector3.zero, size);
             }
         }
 
         float totalWidth = gridX * cell.x + (gridX - 1) * spacingX;
         float totalDepth = gridY * cell.z + (gridY - 1) * spacingZ;
-        Vector3 borderCenter = transform.TransformPoint(new Vector3(0f, 0f, cell.z * 0.5f - totalDepth * 0.5f));
+        Vector3 borderCenter = Holder.TransformPoint(new Vector3(0f, 0f, cell.z * 0.5f - totalDepth * 0.5f));
 
-        Gizmos.matrix = Matrix4x4.TRS(borderCenter, transform.rotation, scale);
+        Gizmos.matrix = Matrix4x4.TRS(borderCenter, Holder.rotation, scale);
         Gizmos.color = gizmoBorderColor;
         Gizmos.DrawWireCube(Vector3.zero, new Vector3(totalWidth, 0f, totalDepth));
 

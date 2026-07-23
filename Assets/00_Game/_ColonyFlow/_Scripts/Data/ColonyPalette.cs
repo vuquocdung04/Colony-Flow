@@ -3,6 +3,8 @@ using UnityEngine;
 
 public static class ColonyPalette
 {
+    public static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+
     public static readonly string[] Hex =
     {
         "#1C2A47",
@@ -44,4 +46,13 @@ public static class ColonyPalette
     }
 
     public static string ToHex(Color color) => "#" + ColorUtility.ToHtmlStringRGB(color);
+
+    public static void Tint(Renderer target, MaterialPropertyBlock block, Color color)
+    {
+        if (target == null || block == null) return;
+
+        target.GetPropertyBlock(block);
+        block.SetColor(BaseColorId, color);
+        target.SetPropertyBlock(block);
+    }
 }

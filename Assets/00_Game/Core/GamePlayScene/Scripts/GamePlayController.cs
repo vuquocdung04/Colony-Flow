@@ -38,11 +38,13 @@ public class GamePlayController : Singleton<GamePlayController>
         gameFlow.Init();
         gameFlow.RequestPause();
 
-        AudioManager.Instance.PlayMusic("Normal Level Music (Cover) 1");
+        if (AudioManager.Instance)
+            AudioManager.Instance.PlayMusic("Normal Level Music (Cover) 1");
 
         await Awaitable.EndOfFrameAsync(destroyCancellationToken);
         await Awaitable.WaitForSecondsAsync(0.5f, destroyCancellationToken);
-        FXManager.Instance.isNextSceneReady = true;
+        if (FXManager.Instance)
+            FXManager.Instance.isNextSceneReady = true;
         await Awaitable.WaitForSecondsAsync(0.5f, destroyCancellationToken);
         gameFlow.RequestResume();
     }

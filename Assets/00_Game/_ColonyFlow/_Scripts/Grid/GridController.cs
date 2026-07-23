@@ -6,6 +6,7 @@ public class GridController : MonoBehaviour
     public TextAsset levelFile;
     public GridTop gridTop;
     public GridBottom gridBottom;
+    public WaitAreas waitAreas;
 
     public ColonyLevelData Data { get; private set; }
 
@@ -33,7 +34,7 @@ public class GridController : MonoBehaviour
         }
 
         if (gridTop != null) gridTop.Load(Data.top);
-        if (gridBottom != null) gridBottom.Load(Data.bottom);
+        if (gridBottom != null) gridBottom.Load(Data.bottom, gridTop, waitAreas);
     }
 
     [Button(ButtonSizes.Medium)]
