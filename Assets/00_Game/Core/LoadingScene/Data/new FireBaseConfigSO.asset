@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 423531b7189ce4c13905e352223d02e2, type: 3}
+  m_Name: new FireBaseConfigSO
+  m_EditorClassIdentifier: Assembly-CSharp::FireBaseConfigSO
+  coinPackRewards: 90010000f4010000b0040000a00f000010270000983a0000
+  wheelSpinDatas:
+  - type: coin
+    quantity: 1000
+    rate: 68
+  - type: coin
+    quantity: 1500
+    rate: 43
+  - type: booster1
+    quantity: 1
+    rate: 49
+  - type: booster2
+    quantity: 1
+    rate: 56
+  - type: booster3
+    quantity: 1
+    rate: 56
+  isLuckyWheelEnabled: 1
+  spinWheelCost: 100
+  startingCoins: 50
+  maxHeart: 5
+  minuteRecoveryHeart: 30
+  coinsRewardPerLevel: 50
+  skinUpgradeCost: 50
+  skinBaseCost: 50
+  levelUnlockSkin: 5
+  isCheatEnabled: 0
+  isRemoveAdsPackVisible: 1
+  isBannerAdEnabled: 0
+  isInterstitialAdEnabled: 1
+  isAppOpendAdsEnabled: 1
+  levelShowBanner: 1
+  levelShowInters: 10
+  levelsBetweenInterstitial: 2
+  levelUnlockBoosters: 030000000600000009000000
+  initialAmountBooster: 2
+  costBuyBoosters: 320000006400000096000000
+  restoreHeartQuantity: 1
+  restoreHeartCost: 50
+  continueBonusTime: 60
+  continueCost: 300
+  multiCoins: 0200000003000000040000000300000002000000
+  customerLevelAppear: 10
+  customerOrderCompletion: 1
+  customerSkipCostCoin: 20
+  customerWaitTimePerItem: 30
+  customerSpawnInterval: 20
+  customerMinInventoryThreshold: 15
+  customerInitialDelay: 10
+  petLevelAppear: 5
+  petCatSpawnInterval: 30
+  petCatInitialDelay: 20

@@ -1,0 +1,168 @@
+KEY,EN,VI
+string,string,string
+ui_button_claim,Claim,Nhận
+ui_button_calimed,Claimed,Đã Nhận
+ui_button_free,Free,Miễn Phí
+ui_button_ok,Ok,Đồng Ý
+ui_button_retry,Retry,Thử Lại
+ui_button_rate,Rate,Đánh Giá
+ui_button_quit,Quit,Thoát
+ui_button_continue,Continue,Tiếp Tục
+ui_button_close,Close,Đóng
+ui_button_play,Play,Chơi
+ui_button_relax,Relax,Thư Giãn
+ui_button_save,Save,Lưu
+ui_claim_success,Claim Success,Nhận Thành Công
+ui_collection_title,Dreamy Collection,Bộ sưu tập Mộng mơ 
+ui_collection_reward,Grand Prize,Giải thưởng lớn 
+ui_collection_dreamscape,Dreamscape,Giấc Mơ
+ui_collection_cloud_nine,Cloud Nine,Bay Bổng
+ui_colection_poetic_muse,Poetic Muse,Nàng Thơ 
+ui_collection_show_time,Show Time!,Sự Kiện
+ui_collection_cozy_corner,Cozy Corner,Tổ Ấm
+ui_collection_ease_side,East Side,Phương Đông
+ui_collection_chill_glow,Chill Glow,Thư Giãn
+ui_collection_sunny_days,Sunny Days,Khám Phá
+ui_collection_wishful_heart,Wishful Heart,Ước Mơ
+ui_collection_tasty_dream,Tasty Dream,Ẩm thực 
+ui_collection_fantasy,Fantasy,Mộng Ảo
+ui_collection_evermore,Evermore,Dinh Thự
+ui_collection_sea_breeze,Sea Breeze,Đại Dương
+ui_collection_wonderscape,Wonderscape,Diệu Kì
+ui_collection_dream,Dream,Mua Sắm
+ui_collection_future,Future,Tương Lai
+ui_collection_green_vibes,Green Vibes,Thiên Nhiên
+ui_collection_grand,Grand,Bí Mật
+ui_collection_fairytale_echo,Fairytale Echo,Cổ Tích
+ui_collection_childhood,Childhood,Tuổi Thơ
+ui_collection_fabulous,Fabulous,Điện Ảnh
+ui_collection_souldmate,Soulmate,Tri Kỉ
+ui_collection_true,True!,Quý Ông
+ui_collection_starry_skies,Starry Skies,Ngân Hà
+ui_collection_game_on,Game On!,Chinh Phục
+ui_collection_detail_dreamscape_desc,"A soft, dreamy space where sweet dreams float by, peaceful and light as a cloud.","Nơi những vì sao thì thầm câu chuyện cổ tích, đưa bạn vào giấc ngủ êm đềm, ngọt ngào như một khúc ca."
+ui_collection_detail_cloud_nine_desc,"Your quiet spot where brilliant sparkle and grow, making every project a delightfull adventure","Không gian yên tĩnh, nơi những ý tưởng lấp lánh được ươm mầm và bay xa, biến mọi điều thành hiện thực."
+ui_collection_detail_poetic_muse_desc,"A tender, private space where every girl finds her peace and embraces unique beauty, cherished and loved.","Góc riêng tư dịu dàng, nơi mỗi cô gái tìm thấy sự bình yên và vẻ đẹp của chính mình, được nâng niu và trân trọng."
+ui_collection_detail_show_time_desc,"A sparkling room filled with laughter and joy, ready for the happiest parties and unforgettable memories.","Không gian rực rỡ, tràn ngập niềm vui và tiếng cười của những bũa tiệc đáng nhớ, nơi bạn là tâm điểm."
+ui_collection_detail_cozy_corner_desc,"Small and sweet, where all worries fade away, leaving only peaceful moments and warm, happy feelings.","Ấm cúng và nhỏ xinh, nơi mọi lo âu tan biến, chỉ còn lại sự bình yên và những khoảnh khắc ngọt ngào."
+ui_collection_detail_east_side_desc,"A tranquit haven insprired by the East, bringing calm and gentle beauty to your peaceful soul.","Vẻ đẹp thanh bình, huyền bí từ phương Đông, mang đến sự tĩnh lặng và an yên cho tâm hồn."
+ui_collection_detail_chilll_glow_desc,"Sink into pure bliss, letting all your worries melt away in this perfectly peaceful escape.","Thả mình vào sự bình yên, tận hưởng những khoảng khắc thư giãn tuyệt vời nhất, quên đi mọi lo toan."
+ui_collection_detail_sunny_days_desc,"Embrace the sunshine and gentle breezes, like a never-ending picnic in your gream out door space.","Tận hưởng ánh nắng và làn gió trời, như một chuyến dã ngoại bất tận ngay trong ngồi nhà mơ ước của bạn."
+ui_collection_detail_wishful_heart_desc,"Nurture your ambitions here, where every detail inspires you to reach for your brightest professional dreams.","Nơi ươm mầm cho những hoài bão nghề nghiệp, mỗi vật dụng đều truyền cảm hứng để bạn vươn tới thành công."
+ui_collection_detail_tasty_dream_desc,"Like a cozy little feast inside a dream - where every dish holds a story, every scent brings back a memory, and the table always feels like it's waiting just for you.","Như một bữa tiệc nhỏ giữa giâc mơ dịu dàng - nơi các món ăn thì thầm kể chuyện, mùi hương thoang thoảng đánh thức ký ức cũ, và chiếc bàn dịu dàng chờ bạn ngồi vào."
+ui_collection_detail_fantasy_desc,"A magical world without limits, where every impossible dream comes true, surprising you with endless delight.","Một thế giới không giới hạn, nơi mọi điều kì diệu đều có thể xảy ra, vượt xa mọi tưởng tượng."
+ui_collection_detail_evermore_desc,"Experience pure luxury and spacious beauty, where every detail whispers of timeless grace and sophistication.","Sự sang trọng và rộng lớn, nơi mỗi chi tiết đều toát lên vẻ đẳng cấp và tinh tế, như một lâu đài trong mơ."
+ui_collection_detail_sea_breeze_desc,"Feel the gentle sea breeze, listen to he calming waves and find pure tranquility by the ocean's edge.","Hit thở làn gió biển mặn mòi, lắng nghe tiếng sóng vỗ rì rào, bình yên đến lạ thường."
+ui_collection_detail_wonderscape_desc,"Where magic happens with every touch, turning tiny treasures into beautiful, inspiring creations.","Nơi phép thuật của sự sáng tạo thăng hoa, biến những vật dụng nhỏ bế thành tác phẩn nghệ thuật đầy cảm hứng."
+ui_collection_detail_dream_desc,"Soft, sparkling, and full of tiny treasures -- Every ribbon, every shimmer, every little thing seems to glow just a bit brighter, simply because it was chosen, touched, and loved by you.","Mềm mại, lấp lánh và đầy ắp những kho báu nhỏ xinh - từng dải ruy băng, từng tia sáng, từng điều nhỏ bé dường như rực rỡ hơn một chút, chỉ vì được bạn chọn lựa, chạm vào và yêu thương."
+ui_collection_detail_future_desc,"Where technology and creativity merge, opening doors to the future, full of promise and delightful surprises.","Nơi công nghệ và sự sáng tạo hòa quyện, mở ra cánh cửa đến tương lai, đầy hứa hẹn và bất ngờ."
+ui_collection_detail_green_vibes_desc,"Breathe in the fresh air, surrounded by lush greenery, like a secret garden just for you.","Hít thở không khí trong lành, đắm mình trong sắc xanh tươi mát của thiên nghiên, như một khu vườn bí mật."
+ui_collection_detail_grand_desc,"Relive legendary moments and explore famous places, each corner holding a charming secret.","Tái hiện những khoảnh khắc lịch sử, những địa điểm huyền thoại, đầy bí ẩn và quyến rũ đến lạ kỳ."
+ui_collection_detail_fairytale_echo_desc,"Step into a whimsical story, where every wish can come true and you're the princess of your own magical tale.","Bước vào thế giới cổ tích, nơi mọi ước mơ đều có thể trở thành hiện thực, và bạn là nàng công chúa của riêng mình."
+ui_collection_detail_childhood_desc,"A colorful world of endless fun a laughter, where imagination soars and every day is a new adventure for tiny dreamers.","Ở đó, ai cũng từng là một đứa trẻ hồn nhiên, để rồi khi lớn lên, những kỷ niệm ấy trở thành sức mạnh dịu dàng dẫn lỗi cho hành trình trưởng thành."
+ui_collection_detail_fabulous_desc,"Dive into the enchanting world of films, where every scene is a wondrous journey to far-off lands.","Đắm chìm vào thế giới điện ảnh, nơi mỗi khung hình là một câu chuyện diệu kỳ, đưa bạn đến những vùng đất xa xôi."
+ui_collection_detail_soulmate_desc,"A cozy corner filled with endless cuddles and happy purrs, where every pet feels right at home.","Góc nhỏ ấm áp, tràn ngập tình yêu thương và tiếng đùa vui của những người bạn bốn chân đáng yêu."
+ui_collection_detail_true_desc,"A stylish, private space where guys can relax and show off their unique personality, perfectly tailored for them.","Không gian riêng tư đầy phong cách, nơi các chàng trai có thể thư giãn và thể hiện các tính độc đáo của mình."
+ui_collection_detail_starry_skies_desc,"Gaze at the twinkling galaxies, exploring the endless mysteries of the universe, like a dream a mong the stars.","Ngắm nhìn dải ngân hà lắp lánh, khám phá những bí ẩn vô tận của vũ trụ, như một giấc mơ giữa các vì sao."
+ui_collection_detail_game_on_desc,"Fele the thrill of the game, where every moment is about passion and celebrating sweet victories.","Nơi năng lượng bùng cháy, mỗi góc đều kể câu chuyện và đam mê và những chiến thằng ngọt ngào."
+ui_collection_detail_desc,Tap to card to play & chill,Chạm vào thẻ để chơi và thư giãn
+ui_collection_detail_dreamscape_title,Dreamscape,Giấc Mơ
+ui_collection_detail_cloud_nine_title,Cloud Nine,Bay Bổng
+ui_colection_detail_poetic_muse_title,Poetic Muse,Nàng Thơ 
+ui_collection_detail_show_time_title,Show Time!,Sự Kiện
+ui_collection_detal_cozy_corner_tittle,Cozy Corner,Tổ Ấm
+ui_collection_detal_ease_side_title,East Side,Phương Đông
+ui_collection_detail_chill_glow_title,Chill Glow,Thư Giãn
+ui_collection_detail_sunny_days_title,Sunny Days,Khám Phá
+ui_collection_detail_wishful_heart_title,Wishful Heart,Ước Mơ
+ui_collection_detail_tasty_dream_title,Tasty Dream,Ẩm thực 
+ui_collection_detail_fantasy_title,Fantasy,Mộng Ảo
+ui_collection_detail_evermore_title,Evermore,Dinh Thự
+ui_collection_detail_sea_breeze_title,Sea Breeze,Đại Dương
+ui_collection_detail_wonderscape_title,Wonderscape,Diệu Kì
+ui_collection_detail_dream_title,Dream,Mua Sắm
+ui_collection_detail_future_title,Future,Tương Lai
+ui_collection_detail_green_vibes_title,Green Vibes,Thiên Nhiên
+ui_collection_detail_grand_title,Grand,Bí Mật
+ui_collection_detail_fairytale_echo_title,Fairytale Echo,Cổ Tích
+ui_collection_detail_childhood_title,Childhood,Tuổi Thơ
+ui_collection_detail_fabulous_title,Fabulous,Điện Ảnh
+ui_collection_detail_souldmate_title,Soulmate,Tri Kỉ
+ui_collection_detail_true_title,True!,Quý Ông
+ui_collection_detail_starry_skies_title,Starry Skies,Ngân Hà
+ui_collection_detail_game_on_title,Game On!,Chinh Phục
+ui_daily_login_title,Daily Login,Đăng nhập hàng ngày
+ui_daily_login_day,Day,Ngày 
+ui_daily_reward_title,Daily Rewards,Phần thưởng hàng ngày
+ui_edit_profile_title,Edit Profile,Chỉnh sửa hồ sơ
+ui_edit_profile_tab_frame,Frame,Khung
+ui_edit_profile_tab_avatar,Avatar,Đại diện
+ui_getmore_booster_title,Get More,Lấy thêm
+ui_getmore_booster_hint_desc,Move an item to the correct location,Di chuyển đối tượng đến đúng vị trí
+ui_getmore_booster_magnifier_desc,Show the shadows of some random items,Hiển thị bóng của một số vật phẩm ngẫu nhiên
+ui_getmore_booster_frooze_desc,Freeze time for 45 seconds,Đóng băng thời gian trong 45 giây
+ui_getmore_booster_boxbuffer_desc,Increase the limit of items in the box that can be opened,Tăng giới hạn số lượng vật phẩm có thể mở trong hộp
+ui_getmore_booster_timebuffer_desc,Add 30 seconds time limit,Thêm giới hạn thời gian thêm 30s 
+ui_getmore_booster_doublestar_desc,Double the number of stars earned in the level,Nhân đôi số sao kiếm được trong màn chơi 
+ui_homescene_team,Shop,Cửa hàng
+ui_homescene_rank,Rank,Xếp hạng
+ui_homescene_home,Home,Trang chủ
+ui_homescene_team,Team,Các đội
+ui_homescene_collection,Collection,Bộ sưu tập
+ui_information_title,Information,Thông tin
+ui_information_relaxmode_title,Relax Mode,Chế độ thư giãn
+ui_information_stickermode_title,Sticker Mode,Chế độ nhãn dán
+ui_information_relaxmode_desc,"Play againlevel & chill with no limit time, no booster.","Chơi lại cấp độ và thư giãn mà không giới hạn thời gian, không có phần thưởng."
+ui_information_stickermode_desc,Freely decorate your favourite room with peel and sticker.,Tự do trang trí căn phòng yêu thích của bạn bằng giấy dán tường.
+ui_information_desc,Both game modes can be played offline,Cả hai chế độ trò chơi đều có thể chơi ngoại tuyến
+ui_level_notunlock_desc,Completed the previous level to unlock this one.,Hoành thành màn trước để mở khóa màn này.
+ui_lose_desc,"No, Thanks!","Không, cảm ơn!"
+ui_lose_title,Level Failed,Cấp độ thất bại
+ui_pigbank_title,Pig Bank,Heo Đất
+ui_pigbank_desc,Complete levels to add Golds to Piggy Bank. Fill it up to get the most Golds for your money!,Hoàn thành các cấp độ để thêm Vàng vào Piggy Bank. Hãy lấp đầy nó để nhận được nhiều vàng nhất.
+ui_quitlevel_title,Quit level?,Thoát màn chơi
+ui_quitlevel_desc,About to lose these keep challenging!,"Sắp thua rồi, tiếp tục thử thách!"
+ui_rank_desc,Reach level 20 to unlock Rank!,Đạt cấp 20 để mở khóa Xếp hạng!
+ui_rategame_title,Rate us,Đánh giá chúng tôi
+ui_rategame_desc,How would you like this game!,Bạn có thích trò chơi này không?
+ui_removeads_title,Remove Ads,Bỏ qua quảng cáo
+ui_removeads_desc_line1,Remove obligatory ads.,Xóa quảng cáo bắt buộc.
+ui_removeads_desc_line2,Remove bottom banner ads.,Xóa quảng cáo banner dưới.
+ui_removeads_desc_title3,Keep optional ads for rewards,Giữ quảng cáo tùy chọn để nhận phần thưởng.
+ui_removeads_desc_tile4,Bonus,Thưởng
+ui_selectgamemode_title,Level,Cấp
+ui_selectgamemode_desc,Select Booster,Chọn vật phẩm hỗ trợ
+ui_selectgamemode_desc_bottom,Pass level to unlock Relax Mode,Vượt qua cấp để mở khóa chế độ thư giãn
+ui_settinggameplay_title,Pause,Tạm dừng
+ui_settinghomescene_title,Settings,Cài đặt 
+ui_settinghomescene_selected_language,English,Tiếng Việt
+ui_shop_removeads_title,Remove Ads,Bỏ quảng cáo
+ui_shop_removeads_desc_line1,Remove obligatory ads.,Xóa quảng cáo bắt buộc
+ui_shop_removeads_desc_line2,Remove bottom banner ads.,Xóa quảng cáo banner dưới
+ui_shop_removeads_desc_line3,Keep optional ads for rewards.,Giữ quảng cáo tùy chọn để nhận phần thưởng.
+ui_shop_removeads_desc_line4,Bonus,Tiền thường 
+ui_shop_vipdreamer_title,VIP Dreamer,Kẻ mộng mơ VIP
+ui_shop_vipdreamer_desc_line1,Bonus 60s All Levels,Thêm 60 giây cho mọi cấp độ
+ui_shop_vipdreamer_desc_line2,Free 3 Boosters Daily,3 vật phẩm hỗ trợ hàng ngày
+ui_shop_vipdreamer_desc_line3,Free 3 Starting Boosters Daily,3 vật phẩm khởi đầu hàng ngày
+ui_shop_vipdreamer_desc_line4,Free Lives 30 minutes Daily,Nhận lượt chơi 30p hàng ngày
+ui_shop_vipdreamer_desc_line5,X2 Gold Reward,Phần thưởng vàng x2
+ui_shop_starterpack_title,Starter Pack,Gói Tân Thủ
+ui_shop_chillpack_title,Chill Pack,Gói Thư Giãn
+ui_shop_dreamybundle_title,Dreamy Bundle,Gói Mộng Mơ
+ui_shop_discoverbundle_title,Discover Bundle,Gói Khám Phá 
+ui_shop_creativebundle_title,Creative Bundle,Gói Sáng Tạo
+ui_shop_superiorbundle_title,Superior Bundle,Gói Cap Cấp
+ui_shop_legendarybundle_title,Legendary Bundle,Gói Huyền Thoại
+ui_teams_title,Reach level 20 to Join Team!,Đạt cấp 20 để tham gia đội
+ui_teams_desc,When you join a team you will get:,"Khi bạn tham gia một nhóm, bạn sẽ nhận được:"
+ui_teams_reward_1,Free Heart,TRÁI TIM MIỄN PHÍ
+ui_teams_reward_2,Free Rewards,PHẦN THƯỞNG MIỄN PHÍ
+ui_timeout_title,Time Out,Hết giờ
+ui_timeout_desc_top,"About to lose this, keep challenging!","Đừng để mất đồ, Cố gắng lên nào!"
+ui_timeout_desc_mid,Continue?,Tiếp tục?
+ui_treasurechest_title,Star Chest,Hộp sao
+ui_treasurechest_desc,Collect star to open it and claim rewards,Thu thập sao để mở và nhận phần thưởng 
+ui_unlockreward_title,Unlock Rewards,Mở khóa phần thưởng
+ui_unlockreward_desc,Tap to Open,Chạm để mở
+ui_win_title,Level Completed!,Hoàn thành cấp độ!
