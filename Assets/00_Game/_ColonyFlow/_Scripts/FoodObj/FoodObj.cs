@@ -32,4 +32,9 @@ public class FoodObj : MonoBehaviour
     }
 
     public void SetColor(string hex) => SetColor(ColonyPalette.ToColor(hex));
+
+    public void Collect(Ant ant)
+    {
+        Destroy(gameObject);
+    }
 }

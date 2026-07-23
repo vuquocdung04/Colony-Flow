@@ -4,6 +4,7 @@ using UnityEngine;
 public class GridBottom : MonoBehaviour
 {
     public Anthill anthill;
+    public Transform holder;
 
     [Min(1)] public int gridX = 4;
     [Min(1)] public int gridY = 2;
@@ -14,6 +15,8 @@ public class GridBottom : MonoBehaviour
     public bool showGizmos = true;
     public Color gizmoColor = new Color(1f, 1f, 1f, 0.35f);
     public Color gizmoBorderColor = new Color(1f, 0.75f, 0.2f, 0.9f);
+
+    public Transform Holder => holder != null ? holder : transform;
 
     public int SlotCount => gridX * gridY;
 
@@ -57,7 +60,7 @@ public class GridBottom : MonoBehaviour
                 int index = slot.Key;
                 if (index < 0 || index >= _slots.Length || _slots[index] != null) continue;
 
-                Anthill item = Instantiate(anthill, SlotCenter(index, cell), rotation, transform);
+                Anthill item = Instantiate(anthill, SlotCenter(index, cell), rotation, Holder);
                 item.SetColor(color);
                 _slots[index] = item;
                 _capacity[index] = slot.Value;

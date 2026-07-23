@@ -4,6 +4,7 @@ using UnityEngine;
 public class GridTop : MonoBehaviour
 {
     public FoodObj foodObj;
+    public Transform holder;
 
     [Min(1)] public int gridX = 24;
     [Min(1)] public int gridY = 24;
@@ -14,6 +15,8 @@ public class GridTop : MonoBehaviour
     public bool showGizmos = true;
     public Color gizmoColor = new Color(1f, 1f, 1f, 0.35f);
     public Color gizmoBorderColor = new Color(0.2f, 0.9f, 1f, 0.9f);
+
+    public Transform Holder => holder != null ? holder : transform;
 
     public Vector3 CellSize => foodObj != null ? foodObj.Size : Vector3.one;
 
@@ -50,7 +53,7 @@ public class GridTop : MonoBehaviour
                 int x = ColonyGridIndex.X(index, gridX);
                 int y = ColonyGridIndex.Y(index, gridX);
 
-                FoodObj item = Instantiate(foodObj, CellCenter(x, y, cell), rotation, transform);
+                FoodObj item = Instantiate(foodObj, CellCenter(x, y, cell), rotation, Holder);
                 item.SetColor(color);
                 _cells[index] = item;
             }
