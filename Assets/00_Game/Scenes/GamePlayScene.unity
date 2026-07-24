@@ -1911,8 +1911,16 @@ MonoBehaviour:
   spacingX: 0.3
   spacingZ: 0.3
   showGizmos: 1
-  gizmoColor: {r: 1, g: 1, b: 1, a: 0.35}
-  gizmoBorderColor: {r: 1, g: 0.75, b: 0.2, a: 0.9}
+  gizmoColor:
+    r: 1
+    g: 1
+    b: 1
+    a: 0.35
+  gizmoBorderColor:
+    r: 1
+    g: 0.75
+    b: 0.2
+    a: 0.9
 --- !u!1 &721269315
 GameObject:
   m_ObjectHideFlags: 0
@@ -7427,7 +7435,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4c90a0c6db76a1b47ae268110235ad2c, type: 2}
+  - {fileID: 2100000, guid: 7dd8dfc10931edf4db62f2b982501c17, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -8473,7 +8481,6 @@ GameObject:
   - component: {fileID: 8129380464257167085}
   - component: {fileID: 8131275209420377201}
   - component: {fileID: 8131275209420377202}
-  - component: {fileID: 8131275209420377203}
   m_Layer: 0
   m_Name: AnThill
   m_TagString: Untagged
@@ -8521,23 +8528,6 @@ MonoBehaviour:
   lockView: {fileID: 8132326081990866061}
   moveDuration: 0.3
   moveEase: 6
---- !u!114 &8131275209420377203
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8131275209420377200}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cd18013ca83a2c441ae5633440ebfa7b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AnthillAnimation
-  root: {fileID: 8129380464257167085}
-  moveDuration: 0.3
-  moveEase: 6
-  _anthill: {fileID: 0}
-  _visual: {fileID: 0}
 --- !u!1 &8131284945144667042
 GameObject:
   m_ObjectHideFlags: 0

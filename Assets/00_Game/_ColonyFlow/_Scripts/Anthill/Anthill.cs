@@ -106,11 +106,11 @@ public class Anthill : MonoBehaviour
         Destroy(gameObject);
     }
 
-    void Update()
+    public void Tick(float delta)
     {
         if (!_spawning || Capacity <= 0 || _grid == null || antPrefab == null) return;
 
-        _timer -= Time.deltaTime;
+        _timer -= delta;
         if (_timer > 0f) return;
         _timer = spawnInterval;
 

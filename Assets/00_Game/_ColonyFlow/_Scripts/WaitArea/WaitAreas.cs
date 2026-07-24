@@ -50,6 +50,21 @@ public class WaitAreas : MonoBehaviour
             if (_occupants[i] == anthill) _occupants[i] = null;
     }
 
+    private void Update()
+    {
+        if (_occupants == null) return;
+
+        float delta = Time.deltaTime;
+
+        for (int i = 0; i < _occupants.Length; i++)
+        {
+            Anthill occupant = _occupants[i];
+            if (occupant == null) continue;
+
+            occupant.Tick(delta);
+        }
+    }
+
     private void EnsureOccupants(int count)
     {
         if (_occupants != null && _occupants.Length == count) return;
