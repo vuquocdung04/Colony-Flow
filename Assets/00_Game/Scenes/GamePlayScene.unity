@@ -1214,8 +1214,8 @@ Transform:
   m_GameObject: {fileID: 517489871}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.33, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0.33, z: -0.15460014}
+  m_LocalScale: {x: 0.91493195, y: 0.91493195, z: 0.91493195}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1008465854}
@@ -1605,7 +1605,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Sample text
+  m_text: 55
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d98d5879ef0ba4ad38d32798d22630cd, type: 2}
   m_sharedMaterial: {fileID: -3828438225811331009, guid: d98d5879ef0ba4ad38d32798d22630cd, type: 2}
@@ -1632,8 +1632,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 80
+  m_fontSizeBase: 80
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2941,12 +2941,17 @@ MonoBehaviour:
   gridY: 24
   spacingX: 0
   spacingZ: 0
-  entranceSpread: 2
+  entranceSpread: 2.37
   entranceOffsetX: 0
   entranceOffsetZ: -7.5
+  squareBound: {fileID: 166637020}
+  fitOnLoad: 1
+  alignToSquareCenter: 1
   showGizmos: 1
   gizmoColor: {r: 1, g: 1, b: 1, a: 0.35}
   gizmoBorderColor: {r: 0.2, g: 0.9, b: 1, a: 0.9}
+  borderRingColor: {r: 1, g: 0.55, b: 0.1, a: 0.75}
+  squareBoundColor: {r: 1, g: 1, b: 1, a: 0.5}
   entranceColor: {r: 0, g: 1, b: 1, a: 1}
   holeEdgeColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &1037215077

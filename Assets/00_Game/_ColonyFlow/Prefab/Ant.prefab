@@ -977,6 +977,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Ant
   meshRenderers:
   - {fileID: 275005151771665907}
+  - {fileID: 994927509852434115}
+  foodHolder: {fileID: 2251052844015923597}
   moveSpeed: 3
   turnSpeed: 540
   arriveDistance: 0.05

@@ -99,9 +99,9 @@ public class Anthill : MonoBehaviour
         if (_timer > 0f) return;
         _timer = spawnInterval;
 
-        if (!_grid.TryReserve(ColorHex, out GridTarget target)) return;
-
         Vector3 position = spawnPoint != null ? spawnPoint.position : transform.position;
+        if (!_grid.TryReserve(ColorHex, position, out GridTarget target)) return;
+
         Ant ant = Instantiate(antPrefab, position, antPrefab.transform.rotation);
         ant.SetColor(ColorHex);
         ant.Init(_grid, target);

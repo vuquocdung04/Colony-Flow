@@ -1,7 +1,10 @@
+using DG.Tweening;
 using UnityEngine;
 
 public class FoodObj : MonoBehaviour
 {
+    public float carryRotationZ = -140f;
+
     static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
     public MeshRenderer meshRenderer;
@@ -35,6 +38,15 @@ public class FoodObj : MonoBehaviour
 
     public void Collect(Ant ant)
     {
-        Destroy(gameObject);
+        Transform holder = ant != null ? ant.foodHolder : null;
+        if (holder == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        transform.SetParent(holder, true);
+        transform.DOLocalRotate(new Vector3(0f, 0f, carryRotationZ), ant.holdDuration)
+                 .SetLink(gameObject);
     }
 }

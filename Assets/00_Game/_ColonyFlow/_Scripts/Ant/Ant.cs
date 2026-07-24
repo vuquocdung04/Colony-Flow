@@ -12,6 +12,7 @@ public enum AntState
 public class Ant : MonoBehaviour
 {
     public List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
+    public Transform foodHolder;
 
     public float moveSpeed = 3f;
     public float turnSpeed = 540f;
