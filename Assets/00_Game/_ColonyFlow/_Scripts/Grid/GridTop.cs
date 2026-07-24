@@ -363,9 +363,85 @@ public class GridTop : MonoBehaviour
         Vector3 cell = CellSize;
         Vector3 entry = EntryPoint(target, cell);
 
-        AppendPerimeter(fromWorld, entry, path, cell);
+        Vector3 boundary = AppendStraightEntry(fromWorld, path, cell);
+
+        AppendPerimeter(boundary, entry, path, cell);
         path.Add(entry);
         path.Add(CellCenter(target.x, target.y, cell));
+    }
+
+    Vector3 AppendStraightEntry(Vector3 fromWorld, List<Vector3> path, Vector3 cell)
+    {
+        ResolveStraight(fromWorld, cell, out Vector3 boundary, out bool hitGate, out Vector3 gateHit, out Vector3 gatePost);
+
+        if (hitGate)
+        {
+            path.Add(gateHit);
+            path.Add(gatePost);
+            return gatePost;
+        }
+
+        path.Add(boundary);
+        return boundary;
+    }
+
+    public Vector3 StraightHit(Vector3 fromWorld)
+    {
+        ResolveStraight(fromWorld, CellSize, out Vector3 boundary, out _, out _, out _);
+        return boundary;
+    }
+
+    void ResolveStraight(Vector3 fromWorld, Vector3 cell, out Vector3 boundary,
+                         out bool hitGate, out Vector3 gateHit, out Vector3 gatePost)
+    {
+        float halfWidth = HalfWidth(cell);
+        float halfDepth = HalfDepth(cell);
+
+        Vector3 local = Holder.InverseTransformPoint(fromWorld);
+        float x = Mathf.Clamp(local.x, -halfWidth, halfWidth);
+        float z = local.z > 0f ? halfDepth : -halfDepth;
+        Vector3 edge = Holder.TransformPoint(new Vector3(x, 0f, z));
+
+        hitGate = false;
+        gateHit = gatePost = Vector3.zero;
+
+        if (TryGetEntranceGate(out _, out _, out Vector3 pointA, out Vector3 pointB))
+        {
+            Vector2 from = new Vector2(fromWorld.x, fromWorld.z);
+            Vector2 to = new Vector2(edge.x, edge.z);
+            Vector2 a = new Vector2(pointA.x, pointA.z);
+            Vector2 b = new Vector2(pointB.x, pointB.z);
+
+            if (SegmentHit(from, to, a, b, out Vector2 hit, out float u))
+            {
+                hitGate = true;
+                gateHit = new Vector3(hit.x, Mathf.Lerp(pointA.y, pointB.y, u), hit.y);
+                gatePost = (hit - a).sqrMagnitude <= (hit - b).sqrMagnitude ? pointA : pointB;
+                boundary = gateHit;
+                return;
+            }
+        }
+
+        boundary = edge;
+    }
+
+    static bool SegmentHit(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out Vector2 hit, out float u)
+    {
+        hit = Vector2.zero;
+        u = 0f;
+
+        Vector2 ab = b - a;
+        Vector2 cd = d - c;
+        float denominator = ab.x * cd.y - ab.y * cd.x;
+        if (Mathf.Abs(denominator) < 1e-6f) return false;
+
+        Vector2 ac = c - a;
+        float t = (ac.x * cd.y - ac.y * cd.x) / denominator;
+        u = (ac.x * ab.y - ac.y * ab.x) / denominator;
+        if (t < 0f || t > 1f || u < 0f || u > 1f) return false;
+
+        hit = a + t * ab;
+        return true;
     }
 
     public void BuildExitPath(GridTarget target, Vector3 toWorld, List<Vector3> path)

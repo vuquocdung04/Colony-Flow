@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -11,6 +12,13 @@ public class WaitAreas : MonoBehaviour
     [Min(0)] public int slotCount = 5;
     public float spacingX = 1f;
 
+    public GridTop gridTop;
+
+    public bool showAimGizmos = true;
+    public Color aimColor = new Color(0.2f, 1f, 0.5f, 0.9f);
+
+    public List<Transform> slots = new List<Transform>();
+
     private Transform Holder => holder != null ? holder : transform;
 
     private Anthill[] _occupants;
@@ -20,15 +28,14 @@ public class WaitAreas : MonoBehaviour
         slotPosition = Vector3.zero;
         if (anthill == null) return false;
 
-        Transform parent = Holder;
-        EnsureOccupants(parent.childCount);
+        EnsureOccupants(slots.Count);
 
-        for (int i = 0; i < _occupants.Length; i++)
+        for (int i = 0; i < slots.Count; i++)
         {
-            if (_occupants[i] != null) continue;
+            if (slots[i] == null || _occupants[i] != null) continue;
 
             _occupants[i] = anthill;
-            slotPosition = parent.GetChild(i).position;
+            slotPosition = slots[i].position;
             return true;
         }
 
@@ -71,9 +78,10 @@ public class WaitAreas : MonoBehaviour
             slot.transform.localPosition = new Vector3(startX + i * spacingX, 0f, 0f);
             slot.transform.localRotation = Quaternion.identity;
             slot.transform.localScale = slotPrefab.transform.localScale;
+            slots.Add(slot.transform);
         }
 
-        _occupants = new Anthill[slotCount];
+        _occupants = new Anthill[slots.Count];
     }
 
     [Button(ButtonSizes.Medium)]
@@ -87,6 +95,7 @@ public class WaitAreas : MonoBehaviour
             else DestroyImmediate(child);
         }
 
+        slots.Clear();
         _occupants = null;
     }
 
@@ -97,5 +106,22 @@ public class WaitAreas : MonoBehaviour
             return (GameObject)PrefabUtility.InstantiatePrefab(slotPrefab, Holder);
 #endif
         return Instantiate(slotPrefab, Holder);
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (!showAimGizmos || gridTop == null || slots == null) return;
+
+        float radius = gridTop.CellSize.x * 0.15f;
+
+        Gizmos.color = aimColor;
+        foreach (Transform slot in slots)
+        {
+            if (slot == null) continue;
+
+            Vector3 hit = gridTop.StraightHit(slot.position);
+            Gizmos.DrawLine(slot.position, hit);
+            Gizmos.DrawWireSphere(slot.position, radius);
+        }
     }
 }
