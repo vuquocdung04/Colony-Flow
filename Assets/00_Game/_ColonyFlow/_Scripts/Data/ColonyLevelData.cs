@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public static class ColonyGridIndex
 {
@@ -21,10 +20,9 @@ public class BottomGridData
     [JsonProperty("gridX")] public int gridX = 4;
     [JsonProperty("gridY")] public int gridY = 2;
     [JsonProperty("colors")] public Dictionary<string, Dictionary<int, int>> colors = new Dictionary<string, Dictionary<int, int>>();
-    [JsonProperty("blinds")] public JArray blinds = new JArray();
-    [JsonProperty("ices")] public JObject ices = new JObject();
-    [JsonProperty("tunnels")] public JObject tunnels = new JObject();
-    [JsonProperty("links")] public JArray links = new JArray();
+    [JsonProperty("hiddens")] public List<int> hiddens = new List<int>();
+    [JsonProperty("locks")] public List<int> locks = new List<int>();
+    [JsonProperty("links")] public List<List<int>> links = new List<List<int>>();
 }
 
 public class ColonyLevelData
@@ -33,7 +31,9 @@ public class ColonyLevelData
     [JsonProperty("bottom")] public BottomGridData bottom = new BottomGridData();
 
     public static ColonyLevelData FromCells(string[] topCells, int topX, int topY,
-                                            string[] bottomCells, int[] bottomCapacity, int bottomX, int bottomY)
+                                            string[] bottomCells, int[] bottomCapacity,
+                                            bool[] bottomHidden, bool[] bottomLock, int[] bottomLink,
+                                            int bottomX, int bottomY)
     {
         ColonyLevelData data = new ColonyLevelData();
 
@@ -71,6 +71,10 @@ public class ColonyLevelData
             }
         }
 
+        data.bottom.hiddens = Flags(bottomHidden);
+        data.bottom.locks = Flags(bottomLock);
+        data.bottom.links = Groups(bottomLink);
+
         return data;
     }
 
@@ -88,23 +92,85 @@ public class ColonyLevelData
         return cells;
     }
 
-    public void BottomToCells(out string[] cells, out int[] capacity)
+    public void BottomToCells(out string[] cells, out int[] capacity,
+                              out bool[] hidden, out bool[] locks, out int[] links)
     {
         int count = AtLeastOne(bottom.gridX) * AtLeastOne(bottom.gridY);
         cells = new string[count];
         capacity = new int[count];
-        if (bottom.colors == null) return;
+        hidden = new bool[count];
+        locks = new bool[count];
+        links = new int[count];
 
-        foreach (KeyValuePair<string, Dictionary<int, int>> pair in bottom.colors)
+        if (bottom.colors != null)
         {
-            if (pair.Value == null) continue;
-            foreach (KeyValuePair<int, int> slot in pair.Value)
+            foreach (KeyValuePair<string, Dictionary<int, int>> pair in bottom.colors)
             {
-                if (slot.Key < 0 || slot.Key >= count) continue;
-                cells[slot.Key] = pair.Key;
-                capacity[slot.Key] = slot.Value;
+                if (pair.Value == null) continue;
+                foreach (KeyValuePair<int, int> slot in pair.Value)
+                {
+                    if (slot.Key < 0 || slot.Key >= count) continue;
+                    cells[slot.Key] = pair.Key;
+                    capacity[slot.Key] = slot.Value;
+                }
             }
         }
+
+        ApplyFlags(bottom.hiddens, hidden);
+        ApplyFlags(bottom.locks, locks);
+
+        if (bottom.links == null) return;
+
+        for (int group = 0; group < bottom.links.Count; group++)
+        {
+            List<int> members = bottom.links[group];
+            if (members == null) continue;
+
+            foreach (int index in members)
+                if (index >= 0 && index < count) links[index] = group + 1;
+        }
+    }
+
+    static List<int> Flags(bool[] source)
+    {
+        List<int> list = new List<int>();
+        if (source == null) return list;
+
+        for (int i = 0; i < source.Length; i++)
+            if (source[i]) list.Add(i);
+
+        return list;
+    }
+
+    static List<List<int>> Groups(int[] source)
+    {
+        List<List<int>> groups = new List<List<int>>();
+        if (source == null) return groups;
+
+        SortedDictionary<int, List<int>> byId = new SortedDictionary<int, List<int>>();
+        for (int i = 0; i < source.Length; i++)
+        {
+            int id = source[i];
+            if (id <= 0) continue;
+
+            if (!byId.TryGetValue(id, out List<int> members))
+            {
+                members = new List<int>();
+                byId[id] = members;
+            }
+            members.Add(i);
+        }
+
+        foreach (KeyValuePair<int, List<int>> pair in byId) groups.Add(pair.Value);
+        return groups;
+    }
+
+    static void ApplyFlags(List<int> source, bool[] target)
+    {
+        if (source == null) return;
+
+        foreach (int index in source)
+            if (index >= 0 && index < target.Length) target[index] = true;
     }
 
     static int AtLeastOne(int value) => value > 0 ? value : 1;
