@@ -1,41 +1,48 @@
-using System.Collections;
-using TMPro;
+using DG.Tweening;
 using UnityEngine;
+
+public enum AnthillState
+{
+    Wait,
+    Sleep,
+}
 
 public class Anthill : MonoBehaviour
 {
-    public MeshRenderer body;
-    public MeshRenderer lid;
-    public TMP_Text capacityLabel;
+    public AnthillVisual visual;
 
     public Ant antPrefab;
     public Transform spawnPoint;
 
     public float spawnInterval = 0.35f;
     public float moveDuration = 0.3f;
+    public Ease moveEase = Ease.OutQuad;
+
+    public AnthillState State { get; private set; } = AnthillState.Sleep;
 
     public string ColorHex { get; private set; }
     public int Capacity { get; private set; }
     public bool IsTaken { get; private set; }
 
-    MaterialPropertyBlock _block;
+    public bool IsHidden { get; private set; }
+    public bool HasRope { get; private set; }
+    public bool IsLocked { get; private set; }
+
+    GridBottom _board;
     GridTop _grid;
     WaitAreas _waitAreas;
+    Tween _move;
     bool _spawning;
     float _timer;
 
-    public Vector3 Size
+    public Vector3 Size => visual != null ? visual.Size : Vector3.one;
+
+    void Awake()
     {
-        get
-        {
-            if (lid == null) return Vector3.one;
-            Vector3 size = lid.bounds.size;
-            return new Vector3(
-                size.x > Mathf.Epsilon ? size.x : 1f,
-                size.y,
-                size.z > Mathf.Epsilon ? size.z : 1f);
-        }
+        if (visual != null) visual.Init(this);
     }
+
+    public void Bind(GridBottom board) => _board = board;
 
     public void Setup(string hex, int capacity, GridTop grid, WaitAreas areas)
     {
@@ -49,23 +56,47 @@ public class Anthill : MonoBehaviour
     public void SetColor(string hex)
     {
         ColorHex = hex;
-        SetColor(ColonyPalette.ToColor(hex));
+        if (visual != null) visual.SetColor(hex);
     }
 
-    public void SetColor(Color color)
+    public void SetRow(int row, bool instant = false) =>
+        SetState(row == 0 ? AnthillState.Wait : AnthillState.Sleep, instant);
+
+    public void SetState(AnthillState next, bool instant = false)
     {
-        _block ??= new MaterialPropertyBlock();
-        ColonyPalette.Tint(body, _block, color);
-        ColonyPalette.Tint(lid, _block, color);
+        if (State == next && !instant) return;
+
+        State = next;
+        if (visual != null) visual.ApplyState(next, instant);
+    }
+
+    public void MoveTo(Vector3 target, bool instant = false, TweenCallback onComplete = null)
+    {
+        _move?.Kill();
+
+        if (instant)
+        {
+            transform.position = target;
+            onComplete?.Invoke();
+            return;
+        }
+
+        _move = transform.DOMove(target, moveDuration)
+                         .SetEase(moveEase)
+                         .SetLink(gameObject);
+
+        if (onComplete != null) _move.OnComplete(onComplete);
     }
 
     public bool TrySelect()
     {
-        if (IsTaken || _waitAreas == null) return false;
+        if (IsTaken || State != AnthillState.Wait || _waitAreas == null) return false;
         if (!_waitAreas.TryPlace(this, out Vector3 slotPosition)) return false;
 
         IsTaken = true;
-        StartCoroutine(MoveThenSpawn(slotPosition));
+        if (_board != null) _board.Release(this);
+
+        MoveTo(slotPosition, false, () => _spawning = true);
         return true;
     }
 
@@ -73,22 +104,6 @@ public class Anthill : MonoBehaviour
     {
         if (_waitAreas != null) _waitAreas.Release(this);
         Destroy(gameObject);
-    }
-
-    IEnumerator MoveThenSpawn(Vector3 target)
-    {
-        Vector3 start = transform.position;
-        float elapsed = 0f;
-
-        while (elapsed < moveDuration)
-        {
-            elapsed += Time.deltaTime;
-            transform.position = Vector3.Lerp(start, target, moveDuration > 0f ? elapsed / moveDuration : 1f);
-            yield return null;
-        }
-
-        transform.position = target;
-        _spawning = true;
     }
 
     void Update()
@@ -117,6 +132,6 @@ public class Anthill : MonoBehaviour
 
     void RefreshLabel()
     {
-        if (capacityLabel != null) capacityLabel.text = Capacity.ToString();
+        if (visual != null) visual.SetCapacity(Capacity);
     }
 }
