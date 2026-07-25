@@ -68,6 +68,27 @@ public class AnthillVisual : MonoBehaviour
                     .SetLink(gameObject);
     }
 
+    public void SetContentActive(bool value)
+    {
+        if (visual != null) visual.gameObject.SetActive(value);
+    }
+
+    public void SetHidden(bool value)
+    {
+        if (hidden != null) hidden.SetHidden(value);
+    }
+
+    public void SetLocked(bool value)
+    {
+        if (lockView != null) lockView.SetLocked(value);
+    }
+
+    public void OnReachRow0()
+    {
+        if (hidden != null) hidden.TryUnlock(true);
+        if (lockView != null) lockView.TryUnlock(false);
+    }
+
     public void SetColor(string hex) => SetColor(ColonyPalette.ToColor(hex));
 
     public void SetColor(Color color)

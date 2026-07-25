@@ -7,6 +7,7 @@ public class AnthillLock : MonoBehaviour
 
     Anthill _anthill;
     AnthillVisual _visual;
+    bool _active;
 
     public void Init(Anthill owner, AnthillVisual visual)
     {
@@ -14,7 +15,18 @@ public class AnthillLock : MonoBehaviour
         _visual = visual;
     }
 
-    public void Unlock()
+    public void SetLocked(bool value)
+    {
+        _active = value;
+        if (lockRoot != null) lockRoot.gameObject.SetActive(value);
+        if (_visual != null) _visual.SetContentActive(!value);
+    }
+
+    public void TryUnlock(bool condition)
+    {
+    }
+
+    public void PlayAnimationUnlock()
     {
     }
 }

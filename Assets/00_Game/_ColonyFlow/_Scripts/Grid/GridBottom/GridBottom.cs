@@ -55,7 +55,25 @@ public partial class GridBottom : MonoBehaviour
             }
         }
 
+        ApplyFlags(data.hiddens, ColonyMark.Hidden);
+        ApplyFlags(data.locks, ColonyMark.Lock);
         RefreshRows(true);
+    }
+
+    enum ColonyMark { Hidden, Lock }
+
+    void ApplyFlags(List<int> indices, ColonyMark mark)
+    {
+        if (indices == null) return;
+
+        foreach (int index in indices)
+        {
+            Anthill item = SlotAt(index);
+            if (item == null) continue;
+
+            if (mark == ColonyMark.Hidden) item.SetHidden(true);
+            else item.SetLocked(true);
+        }
     }
 
     public void Clear()

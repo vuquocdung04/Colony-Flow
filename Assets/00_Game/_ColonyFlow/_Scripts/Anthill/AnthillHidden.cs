@@ -8,6 +8,7 @@ public class AnthillHidden : MonoBehaviour
 
     Anthill _anthill;
     AnthillVisual _visual;
+    bool _active;
 
     public void Init(Anthill owner, AnthillVisual visual)
     {
@@ -15,7 +16,20 @@ public class AnthillHidden : MonoBehaviour
         _visual = visual;
     }
 
-    public void Reveal()
+    public void SetHidden(bool value)
     {
+        _active = value;
+        if (hidden != null) hidden.gameObject.SetActive(value);
+        if (_visual != null) _visual.SetContentActive(!value);
+    }
+
+    public void TryUnlock(bool condition)
+    {
+        if (!_active || !condition) return;
+
+        _active = false;
+        if (hiddenReveal != null) hiddenReveal.Play();
+        if (hidden != null) hidden.gameObject.SetActive(false);
+        if (_visual != null) _visual.SetContentActive(true);
     }
 }

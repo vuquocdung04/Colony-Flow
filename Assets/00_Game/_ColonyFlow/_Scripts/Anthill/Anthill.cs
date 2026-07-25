@@ -59,14 +59,30 @@ public class Anthill : MonoBehaviour
         if (visual != null) visual.SetColor(hex);
     }
 
+    public void SetHidden(bool value)
+    {
+        IsHidden = value;
+        if (visual != null) visual.SetHidden(value);
+    }
+
+    public void SetLocked(bool value)
+    {
+        IsLocked = value;
+        if (visual != null) visual.SetLocked(value);
+    }
+
     public void SetRow(int row, bool instant = false) =>
         SetState(row == 0 ? AnthillState.Wait : AnthillState.Sleep, instant);
 
     public void SetState(AnthillState next, bool instant = false)
     {
-        if (State == next && !instant) return;
+        bool changed = State != next;
+        if (!changed && !instant) return;
 
         State = next;
+
+        if (changed && !instant && next == AnthillState.Wait && visual != null) visual.OnReachRow0();
+
         if (visual != null) visual.ApplyState(next, instant);
     }
 
