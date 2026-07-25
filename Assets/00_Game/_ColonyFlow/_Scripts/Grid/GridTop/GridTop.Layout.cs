@@ -32,6 +32,25 @@ public partial class GridTop
         return CellWorld(x, y);
     }
 
+    public Vector3 RegionCenter(ColonyRegion region)
+    {
+        EnsureLayout();
+        return (CellWorld(region.x0, region.y0) + CellWorld(region.x1, region.y1)) * 0.5f;
+    }
+
+    public Vector3 RegionSize(ColonyRegion region)
+    {
+        EnsureLayout();
+
+        int nx = region.x1 - region.x0 + 1;
+        int ny = region.y1 - region.y0 + 1;
+
+        return new Vector3(
+            nx * _cell.x + (nx - 1) * spacingX,
+            _cell.y,
+            ny * _cell.z + (ny - 1) * spacingZ);
+    }
+
     public void RefreshLayout()
     {
         _cell = foodObj != null ? foodObj.Size : Vector3.one;

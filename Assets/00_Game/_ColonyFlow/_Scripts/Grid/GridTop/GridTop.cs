@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EventDispatcher;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -6,6 +7,8 @@ public partial class GridTop : MonoBehaviour
 {
     [BoxGroup("Refs")] public FoodObj foodObj;
     [BoxGroup("Refs")] public FoodKey foodKey;
+    [BoxGroup("Refs")] public CookieBlocker cookieBlocker;
+    [BoxGroup("Refs")] public HungryDoor hungryDoor;
     [BoxGroup("Refs")] public Transform holder;
     [BoxGroup("Refs")] public Transform hole;
 
@@ -32,6 +35,7 @@ public partial class GridTop : MonoBehaviour
 
     [System.NonSerialized] string[] _colors;
     [System.NonSerialized] bool[] _reserved;
+    [System.NonSerialized] bool[] _blocked;
     [System.NonSerialized] bool[] _hidden;
     [System.NonSerialized] int _hiddenRemaining;
     [System.NonSerialized] FoodObj[] _cells;
@@ -40,6 +44,8 @@ public partial class GridTop : MonoBehaviour
     [System.NonSerialized] FoodKey[] _keyObjects;
     [System.NonSerialized] int _keyLockedRemaining;
     readonly List<LockRequest> _lockRequests = new List<LockRequest>();
+
+    readonly List<BlockerBase> _blockers = new List<BlockerBase>();
 
     class LockRequest
     {
@@ -79,6 +85,7 @@ public partial class GridTop : MonoBehaviour
         int count = gridX * gridY;
         _colors = new string[count];
         _reserved = new bool[count];
+        _blocked = new bool[count];
         _hidden = new bool[count];
         _hiddenRemaining = 0;
         _cells = new FoodObj[count];
@@ -132,6 +139,8 @@ public partial class GridTop : MonoBehaviour
         }
 
         SpawnKeys(data, count);
+        SpawnCookies(data);
+        SpawnDoors(data);
         RebuildOpen();
     }
 
@@ -177,8 +186,94 @@ public partial class GridTop : MonoBehaviour
         }
     }
 
+    void SpawnCookies(TopGridData data)
+    {
+        if (cookieBlocker == null || data.cookie == null) return;
+
+        Quaternion rotation = cookieBlocker.transform.rotation;
+
+        foreach (KeyValuePair<int, List<List<int>>> byCapacity in data.cookie)
+        {
+            if (byCapacity.Value == null) continue;
+
+            foreach (List<int> cells in byCapacity.Value)
+            {
+                ColonyRegion region = ColonyRegion.FromIndices(cells, gridX);
+                if (region == null) continue;
+
+                CookieBlocker item = Instantiate(cookieBlocker, RegionCenter(region), rotation, Holder);
+                item.SetSize(RegionSize(region));
+                Track(item, byCapacity.Key, cells);
+            }
+        }
+    }
+
+    void SpawnDoors(TopGridData data)
+    {
+        if (hungryDoor == null || data.hungryDoor == null) return;
+
+        Quaternion rotation = hungryDoor.transform.rotation;
+
+        foreach (KeyValuePair<string, Dictionary<int, List<List<int>>>> byColor in data.hungryDoor)
+        {
+            if (byColor.Value == null) continue;
+
+            foreach (KeyValuePair<int, List<List<int>>> byCapacity in byColor.Value)
+            {
+                if (byCapacity.Value == null) continue;
+
+                foreach (List<int> cells in byCapacity.Value)
+                {
+                    ColonyRegion region = ColonyRegion.FromIndices(cells, gridX);
+                    if (region == null) continue;
+
+                    HungryDoor item = Instantiate(hungryDoor, RegionCenter(region), rotation, Holder);
+                    item.SetColor(byColor.Key);
+                    item.SetSize(RegionSize(region));
+                    Track(item, byCapacity.Key, cells);
+                }
+            }
+        }
+    }
+
+    void Track(BlockerBase blocker, int capacity, List<int> cells)
+    {
+        blocker.Setup(capacity, CoveredObjects(cells));
+        blocker.Emptied += done =>
+        {
+            _blockers.Remove(done);
+            Unblock(cells);
+        };
+
+        SetBlocked(cells, true);
+        _blockers.Add(blocker);
+    }
+
+    List<GameObject> CoveredObjects(List<int> cells)
+    {
+        List<GameObject> covered = new List<GameObject>();
+
+        foreach (int index in cells)
+        {
+            if (index < 0 || index >= _cells.Length) continue;
+
+            if (_cells[index] != null) covered.Add(_cells[index].gameObject);
+            if (_keyObjects[index] != null) covered.Add(_keyObjects[index].gameObject);
+        }
+
+        return covered;
+    }
+
     public void Clear()
     {
+        foreach (BlockerBase blocker in _blockers)
+        {
+            if (blocker == null) continue;
+            if (Application.isPlaying) Destroy(blocker.gameObject);
+            else DestroyImmediate(blocker.gameObject);
+        }
+        _blockers.Clear();
+
         if (_cells != null)
         {
             foreach (FoodObj item in _cells)
@@ -201,6 +296,7 @@ public partial class GridTop : MonoBehaviour
 
         _colors = null;
         _reserved = null;
+        _blocked = null;
         _hidden = null;
         _hiddenRemaining = 0;
         _cells = null;
@@ -227,7 +323,7 @@ public partial class GridTop : MonoBehaviour
 
         for (int index = 0; index < _colors.Length; index++)
         {
-            if (_reserved[index] || _colors[index] != hex) continue;
+            if (_reserved[index] || _blocked[index] || _colors[index] != hex) continue;
 
             int x = ColonyGridIndex.X(index, gridX);
             int y = ColonyGridIndex.Y(index, gridX);
@@ -252,14 +348,34 @@ public partial class GridTop : MonoBehaviour
         if (_reserved != null && index >= 0 && index < _reserved.Length) _reserved[index] = false;
     }
 
+    public bool IsBlocked(int index) =>
+        _blocked != null && index >= 0 && index < _blocked.Length && _blocked[index];
+
+    public void SetBlocked(List<int> cells, bool value)
+    {
+        if (_blocked == null || cells == null) return;
+
+        foreach (int index in cells)
+            if (index >= 0 && index < _blocked.Length) _blocked[index] = value;
+    }
+
+    public void Unblock(List<int> cells)
+    {
+        SetBlocked(cells, false);
+        RebuildOpen();
+    }
+
     public void Collect(int index, Ant ant)
     {
         if (_colors == null || index < 0 || index >= _colors.Length) return;
         if (string.IsNullOrEmpty(_colors[index])) return;
 
+        string hex = _colors[index];
         _colors[index] = null;
         _reserved[index] = false;
         _remaining--;
+
+        if (_blockers.Count > 0) this.PostEvent(EventID.BLOCK_DESTROYED, hex);
 
         OpenCell(ColonyGridIndex.X(index, gridX), ColonyGridIndex.Y(index, gridX));
 

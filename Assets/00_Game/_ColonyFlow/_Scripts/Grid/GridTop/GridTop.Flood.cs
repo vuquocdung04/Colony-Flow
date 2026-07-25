@@ -7,12 +7,18 @@ public partial class GridTop
         if (!InBounds(x, y)) return false;
 
         int index = ColonyGridIndex.From(x, y, gridX);
+        if (_blocked != null && _blocked[index]) return true;
         if (!string.IsNullOrEmpty(_colors[index])) return true;
         return _keyColor != null && !string.IsNullOrEmpty(_keyColor[index]);
     }
 
-    public bool IsReachable(int x, int y) =>
-        HasBlock(x, y) && ChooseApproach(x, y, out _);
+    public bool IsReachable(int x, int y)
+    {
+        if (!InBounds(x, y)) return false;
+        if (_blocked != null && _blocked[ColonyGridIndex.From(x, y, gridX)]) return false;
+
+        return HasBlock(x, y) && ChooseApproach(x, y, out _);
+    }
 
     void RebuildOpen()
     {
