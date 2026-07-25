@@ -35,6 +35,7 @@ public class ColonyLevelPainter : OdinEditorWindow
     static readonly Color CookieColor = new Color(0.85f, 0.62f, 0.32f, 1f);
 
     const float RegionFillAlpha = 0.65f;
+    const float GridFieldWidth = 104f;
     const int CookieSize = 2;
 
     [MenuItem("Tools/Colony Flow/Level Painter")]
@@ -250,7 +251,7 @@ public class ColonyLevelPainter : OdinEditorWindow
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
         DrawModeButton(ColonyPaintMode.Key, "KEY");
-        DrawBrushPicker();
+        DrawBrushSwatch();
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
     }
@@ -259,7 +260,7 @@ public class ColonyLevelPainter : OdinEditorWindow
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
         DrawModeButton(ColonyPaintMode.HungryDoor, "DOOR");
-        DrawBrushPicker();
+        DrawBrushSwatch();
         _doorCapacity = DrawCapacityField(_doorCapacity);
         _showDoors = EditorGUILayout.ToggleLeft("Show", _showDoors, GUILayout.Width(52f));
         GUILayout.FlexibleSpace();
@@ -280,7 +281,7 @@ public class ColonyLevelPainter : OdinEditorWindow
     {
         EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
         DrawModeButton(ColonyPaintMode.Lock, "LOCK");
-        DrawBrushPicker();
+        DrawBrushSwatch();
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
     }
@@ -307,17 +308,17 @@ public class ColonyLevelPainter : OdinEditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
-    void DrawBrushPicker()
+    void DrawCapacityGroup()
     {
-        int next = EditorGUILayout.Popup(_brush, ColonyPalette.Names, GUILayout.Width(72f));
-        if (next != _brush)
-        {
-            _brush = next;
-            Repaint();
-        }
-
-        DrawSwatch(ColonyPalette.ToColor(ColonyPalette.HexAt(_brush)));
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+        _capacityValue = DrawCapacityField(_capacityValue);
+        GUILayout.Space(6f);
+        if (GUILayout.Button("Auto Capacity", EditorStyles.miniButton, GUILayout.Width(96f))) AutoCapacity();
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
     }
+
+    void DrawBrushSwatch() => DrawSwatch(ColonyPalette.ToColor(ColonyPalette.HexAt(_brush)));
 
     static void DrawSwatch(Color color)
     {
@@ -377,10 +378,24 @@ public class ColonyLevelPainter : OdinEditorWindow
         EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(width));
         EditorGUILayout.LabelField("GRID TOP", EditorStyles.boldLabel);
 
-        EditorGUIUtility.labelWidth = 52f;
+        EditorGUILayout.BeginHorizontal();
+
+        EditorGUILayout.BeginVertical(GUILayout.Width(GridFieldWidth));
+        EditorGUIUtility.labelWidth = 46f;
         int nextX = Mathf.Clamp(EditorGUILayout.IntField("Grid X", _topX), 1, MaxGrid);
         int nextY = Mathf.Clamp(EditorGUILayout.IntField("Grid Y", _topY), 1, MaxGrid);
         EditorGUIUtility.labelWidth = 0f;
+        EditorGUILayout.EndVertical();
+
+        GUILayout.Space(8f);
+
+        EditorGUILayout.BeginVertical();
+        DrawKeyGroup();
+        DrawDoorGroup();
+        DrawCookieGroup();
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.EndHorizontal();
 
         if (nextX != _topX || nextY != _topY)
         {
@@ -391,10 +406,6 @@ public class ColonyLevelPainter : OdinEditorWindow
             _topY = nextY;
             PruneRegions();
         }
-
-        DrawKeyGroup();
-        DrawDoorGroup();
-        DrawCookieGroup();
 
         EditorGUILayout.Space(4f);
         DrawGrid(_topX, _topY, _topCells, null, _cellSize, false);
@@ -472,14 +483,28 @@ public class ColonyLevelPainter : OdinEditorWindow
 
     void DrawBottomPanel()
     {
-        float width = Mathf.Max(280f, _botX * _botCellSize + 26f);
+        float width = Mathf.Max(360f, _botX * _botCellSize + 26f);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(width));
         EditorGUILayout.LabelField("GRID BOTTOM", EditorStyles.boldLabel);
 
-        EditorGUIUtility.labelWidth = 52f;
+        EditorGUILayout.BeginHorizontal();
+
+        EditorGUILayout.BeginVertical(GUILayout.Width(GridFieldWidth));
+        EditorGUIUtility.labelWidth = 46f;
         int nextX = Mathf.Clamp(EditorGUILayout.IntField("Grid X", _botX), 1, MaxGrid);
         int nextY = Mathf.Clamp(EditorGUILayout.IntField("Grid Y", _botY), 1, MaxGrid);
         EditorGUIUtility.labelWidth = 0f;
+        EditorGUILayout.EndVertical();
+
+        GUILayout.Space(8f);
+
+        EditorGUILayout.BeginVertical();
+        DrawLockGroup();
+        DrawLinkGroup();
+        DrawCapacityGroup();
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.EndHorizontal();
 
         if (nextX != _botX || nextY != _botY)
         {
@@ -491,16 +516,6 @@ public class ColonyLevelPainter : OdinEditorWindow
             _botX = nextX;
             _botY = nextY;
         }
-
-        DrawLockGroup();
-        DrawLinkGroup();
-
-        EditorGUILayout.BeginHorizontal();
-        EditorGUIUtility.labelWidth = 62f;
-        _capacityValue = Mathf.Max(0, EditorGUILayout.IntField("Capacity", _capacityValue));
-        EditorGUIUtility.labelWidth = 0f;
-        if (GUILayout.Button("Auto Capacity", GUILayout.Width(110f))) AutoCapacity();
-        EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space(4f);
         DrawGrid(_botX, _botY, _botCells, _botCapacity, _botCellSize, true);
