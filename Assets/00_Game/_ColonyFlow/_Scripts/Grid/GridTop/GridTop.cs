@@ -31,6 +31,8 @@ public partial class GridTop : MonoBehaviour
 
     [System.NonSerialized] string[] _colors;
     [System.NonSerialized] bool[] _reserved;
+    [System.NonSerialized] bool[] _hidden;
+    [System.NonSerialized] int _hiddenRemaining;
     [System.NonSerialized] FoodObj[] _cells;
 
     [System.NonSerialized] bool[] _open;
@@ -64,8 +66,14 @@ public partial class GridTop : MonoBehaviour
         int count = gridX * gridY;
         _colors = new string[count];
         _reserved = new bool[count];
+        _hidden = new bool[count];
+        _hiddenRemaining = 0;
         _cells = new FoodObj[count];
         _remaining = 0;
+
+        HashSet<int> hiddenSet = data.hiddens != null && data.hiddens.Count > 0
+            ? new HashSet<int>(data.hiddens)
+            : null;
 
         Quaternion rotation = foodObj != null ? foodObj.transform.rotation : Quaternion.identity;
 
@@ -89,6 +97,14 @@ public partial class GridTop : MonoBehaviour
 
                     FoodObj item = Instantiate(foodObj, CellWorld(x, y), rotation, Holder);
                     item.SetColor(pair.Key);
+
+                    if (hiddenSet != null && hiddenSet.Contains(index))
+                    {
+                        _hidden[index] = true;
+                        _hiddenRemaining++;
+                        item.SetHidden(true);
+                    }
+
                     _cells[index] = item;
                 }
             }
@@ -111,6 +127,8 @@ public partial class GridTop : MonoBehaviour
 
         _colors = null;
         _reserved = null;
+        _hidden = null;
+        _hiddenRemaining = 0;
         _cells = null;
         _open = null;
         _cameFrom = null;

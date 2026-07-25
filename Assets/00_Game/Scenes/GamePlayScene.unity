@@ -7244,6 +7244,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FoodObj
   carryRotationZ: -140
   meshRenderer: {fileID: 23243735968237478}
+  hiddenMaterial: {fileID: 2100000, guid: ceb03b9305c60e041bef49efccbfcee7, type: 2}
 --- !u!4 &4703437036870412
 Transform:
   m_ObjectHideFlags: 0

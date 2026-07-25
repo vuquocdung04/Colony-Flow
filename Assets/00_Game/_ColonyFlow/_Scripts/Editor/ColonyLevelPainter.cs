@@ -65,7 +65,7 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         Directory.CreateDirectory(directory);
         ColonyLevelData data = ColonyLevelData.FromCells(
-            _topCells, _topX, _topY,
+            _topCells, _topHidden, _topX, _topY,
             _botCells, _botCapacity, _botHidden, _botLock, _botLink, _botX, _botY);
         File.WriteAllText(path, ColonyLevelIO.ToJson(data));
 
@@ -95,6 +95,7 @@ public class ColonyLevelPainter : OdinEditorWindow
         _topX = Mathf.Clamp(data.top.gridX, 1, MaxGrid);
         _topY = Mathf.Clamp(data.top.gridY, 1, MaxGrid);
         _topCells = data.TopToCells();
+        _topHidden = data.TopHiddenFlags();
 
         _botX = Mathf.Clamp(data.bottom.gridX, 1, MaxGrid);
         _botY = Mathf.Clamp(data.bottom.gridY, 1, MaxGrid);
@@ -115,6 +116,7 @@ public class ColonyLevelPainter : OdinEditorWindow
     [SerializeField, HideInInspector] int _topX = 24;
     [SerializeField, HideInInspector] int _topY = 24;
     [SerializeField, HideInInspector] string[] _topCells;
+    [SerializeField, HideInInspector] bool[] _topHidden;
 
     [SerializeField, HideInInspector] int _botX = 4;
     [SerializeField, HideInInspector] int _botY = 2;
@@ -277,6 +279,7 @@ public class ColonyLevelPainter : OdinEditorWindow
         if (nextX != _topX || nextY != _topY)
         {
             _topCells = Resize(_topCells, _topX, _topY, nextX, nextY);
+            _topHidden = Resize(_topHidden, _topX, _topY, nextX, nextY);
             _topX = nextX;
             _topY = nextY;
         }
@@ -285,7 +288,7 @@ public class ColonyLevelPainter : OdinEditorWindow
         DrawGrid(_topX, _topY, _topCells, null, _cellSize, false);
         DrawGuides(_topX, _topY, _topRects);
         EditorGUILayout.Space(2f);
-        EditorGUILayout.LabelField($"Đã tô {PaintedCount(_topCells)} / {_topCells.Length} ô", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Đã tô {PaintedCount(_topCells)} / {_topCells.Length} ô    •    Hidden {CountFlags(_topHidden)}", EditorStyles.miniLabel);
         EditorGUILayout.EndVertical();
     }
 
@@ -405,6 +408,11 @@ public class ColonyLevelPainter : OdinEditorWindow
                 DrawDot(new Vector2(inner.xMax - margin, inner.yMax - margin), radius, HiddenDot);
             if (_botLock[index])
                 DrawDot(new Vector2(inner.xMax - margin, inner.y + margin), radius, LockDot);
+        }
+        else if (_topHidden[index])
+        {
+            float radius = Mathf.Clamp(cellSize * 0.18f, 2.5f, 6f);
+            DrawDot(rect.center, radius, HiddenDot);
         }
 
         string label = null;
@@ -528,7 +536,11 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         bool paint = current.button == 0;
 
-        if (!bottom || _mode == ColonyPaintMode.Color)
+        if (!bottom && _mode == ColonyPaintMode.Hidden)
+        {
+            _topHidden[index] = paint;
+        }
+        else if (!bottom || _mode == ColonyPaintMode.Color)
         {
             if (paint)
             {
@@ -540,6 +552,7 @@ public class ColonyLevelPainter : OdinEditorWindow
                 cells[index] = null;
                 if (capacity != null) capacity[index] = 0;
                 if (bottom) ClearMarks(index);
+                else _topHidden[index] = false;
             }
         }
         else
@@ -615,6 +628,8 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         if (_topCells == null || _topCells.Length != _topX * _topY)
             _topCells = Resize(_topCells, _topX, _topY, _topX, _topY);
+        if (_topHidden == null || _topHidden.Length != _topX * _topY)
+            _topHidden = Resize(_topHidden, _topX, _topY, _topX, _topY);
         if (_botCells == null || _botCells.Length != _botX * _botY)
             _botCells = Resize(_botCells, _botX, _botY, _botX, _botY);
         if (_botCapacity == null || _botCapacity.Length != _botX * _botY)

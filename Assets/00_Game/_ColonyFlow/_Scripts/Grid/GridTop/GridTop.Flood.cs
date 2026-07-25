@@ -33,6 +33,7 @@ public partial class GridTop
         }
 
         Drain();
+        RevealExposed();
     }
 
     void OpenCell(int x, int y)
@@ -41,6 +42,27 @@ public partial class GridTop
         if (!TrySeed(x, y)) return;
 
         Drain();
+        RevealExposed();
+    }
+
+    // Hidden food blocks reveal their real material once the flood (water) reaches
+    // them, i.e. once they become an "outer" reachable block.
+    void RevealExposed()
+    {
+        if (_hiddenRemaining <= 0 || _hidden == null) return;
+
+        for (int index = 0; index < _hidden.Length; index++)
+        {
+            if (!_hidden[index]) continue;
+
+            int x = ColonyGridIndex.X(index, gridX);
+            int y = ColonyGridIndex.Y(index, gridX);
+            if (!IsReachable(x, y)) continue;
+
+            _hidden[index] = false;
+            _hiddenRemaining--;
+            if (_cells != null && _cells[index] != null) _cells[index].Reveal();
+        }
     }
 
     void Drain()

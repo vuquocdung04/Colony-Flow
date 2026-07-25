@@ -8,8 +8,15 @@ public class FoodObj : MonoBehaviour
     static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
     public MeshRenderer meshRenderer;
+    public Material hiddenMaterial;
 
     MaterialPropertyBlock _block;
+    Material _realMaterial;
+    Color _color = Color.white;
+    bool _hasColor;
+    bool _hidden;
+
+    public bool IsHidden => _hidden;
 
     public Vector3 Size
     {
@@ -26,15 +33,56 @@ public class FoodObj : MonoBehaviour
 
     public void SetColor(Color color)
     {
+        _color = color;
+        _hasColor = true;
+        if (_hidden) return;
+        ApplyColor();
+    }
+
+    public void SetColor(string hex) => SetColor(ColonyPalette.ToColor(hex));
+
+    public void SetHidden(bool value)
+    {
+        _hidden = value;
+        if (meshRenderer == null) return;
+
+        if (value)
+        {
+            if (hiddenMaterial != null)
+            {
+                if (_realMaterial == null) _realMaterial = meshRenderer.sharedMaterial;
+                meshRenderer.sharedMaterial = hiddenMaterial;
+                ClearBlock();
+            }
+        }
+        else
+        {
+            if (_realMaterial != null) meshRenderer.sharedMaterial = _realMaterial;
+            if (_hasColor) ApplyColor();
+        }
+    }
+
+    public void Reveal() => SetHidden(false);
+
+    void ApplyColor()
+    {
         if (meshRenderer == null) return;
 
         _block ??= new MaterialPropertyBlock();
         meshRenderer.GetPropertyBlock(_block);
-        _block.SetColor(BaseColorId, color);
+        _block.SetColor(BaseColorId, _color);
         meshRenderer.SetPropertyBlock(_block);
     }
 
-    public void SetColor(string hex) => SetColor(ColonyPalette.ToColor(hex));
+    void ClearBlock()
+    {
+        if (meshRenderer == null) return;
+
+        _block ??= new MaterialPropertyBlock();
+        meshRenderer.GetPropertyBlock(_block);
+        _block.Clear();
+        meshRenderer.SetPropertyBlock(_block);
+    }
 
     public void Collect(Ant ant)
     {

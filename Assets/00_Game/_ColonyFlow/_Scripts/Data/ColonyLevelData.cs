@@ -13,6 +13,7 @@ public class TopGridData
     [JsonProperty("gridX")] public int gridX = 24;
     [JsonProperty("gridY")] public int gridY = 24;
     [JsonProperty("colors")] public Dictionary<string, List<int>> colors = new Dictionary<string, List<int>>();
+    [JsonProperty("hiddens")] public List<int> hiddens = new List<int>();
 }
 
 public class BottomGridData
@@ -30,7 +31,7 @@ public class ColonyLevelData
     [JsonProperty("top")] public TopGridData top = new TopGridData();
     [JsonProperty("bottom")] public BottomGridData bottom = new BottomGridData();
 
-    public static ColonyLevelData FromCells(string[] topCells, int topX, int topY,
+    public static ColonyLevelData FromCells(string[] topCells, bool[] topHidden, int topX, int topY,
                                             string[] bottomCells, int[] bottomCapacity,
                                             bool[] bottomHidden, bool[] bottomLock, int[] bottomLink,
                                             int bottomX, int bottomY)
@@ -39,6 +40,7 @@ public class ColonyLevelData
 
         data.top.gridX = topX;
         data.top.gridY = topY;
+        data.top.hiddens = Flags(topHidden);
         if (topCells != null)
         {
             for (int i = 0; i < topCells.Length; i++)
@@ -90,6 +92,13 @@ public class ColonyLevelData
                 if (index >= 0 && index < cells.Length) cells[index] = pair.Key;
         }
         return cells;
+    }
+
+    public bool[] TopHiddenFlags()
+    {
+        bool[] flags = new bool[AtLeastOne(top.gridX) * AtLeastOne(top.gridY)];
+        ApplyFlags(top.hiddens, flags);
+        return flags;
     }
 
     public void BottomToCells(out string[] cells, out int[] capacity,
