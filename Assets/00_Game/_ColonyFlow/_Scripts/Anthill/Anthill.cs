@@ -28,13 +28,17 @@ public class Anthill : MonoBehaviour
     public bool IsHidden { get; private set; }
     public bool HasRope { get; private set; }
     public bool IsLocked { get; private set; }
+    public string LockColorHex { get; private set; }
 
     GridBottom _board;
     GridTop _grid;
     WaitAreas _waitAreas;
     Tween _move;
     bool _spawning;
+    bool _keyRequested;
     float _timer;
+
+    public Transform LockTarget => visual != null ? visual.LockTarget : transform;
 
     public int Index { get; private set; }
 
@@ -80,10 +84,30 @@ public class Anthill : MonoBehaviour
         if (visual != null) visual.SetHidden(value);
     }
 
-    public void SetLocked(bool value)
+    public void SetLocked(bool value, string colorHex = null)
     {
         IsLocked = value;
-        if (visual != null) visual.SetLocked(value);
+        if (colorHex != null) LockColorHex = colorHex;
+
+        if (visual == null) return;
+
+        visual.SetLocked(value);
+        if (value && !string.IsNullOrEmpty(LockColorHex))
+            visual.SetLockColor(ColonyPalette.ToColor(LockColorHex));
+    }
+
+    public void RequestKeyUnlock()
+    {
+        if (_keyRequested || !IsLocked || _grid == null || string.IsNullOrEmpty(LockColorHex)) return;
+
+        _keyRequested = true;
+        _grid.RequestKey(LockColorHex, LockTarget, OnKeyArrived);
+    }
+
+    void OnKeyArrived()
+    {
+        if (_board != null) _board.ConsumeLock(this);
+        else Destroy(gameObject);
     }
 
     public void SetRow(int row, bool instant = false) =>
@@ -96,7 +120,11 @@ public class Anthill : MonoBehaviour
 
         State = next;
 
-        if (changed && !instant && next == AnthillState.Wait && visual != null) visual.OnReachRow0();
+        if (changed && !instant && next == AnthillState.Wait)
+        {
+            if (visual != null) visual.OnReachRow0();
+            if (IsLocked) RequestKeyUnlock();
+        }
 
         if (visual != null) visual.ApplyState(next, instant);
     }
@@ -127,7 +155,7 @@ public class Anthill : MonoBehaviour
 
     public bool TrySelect()
     {
-        if (IsTaken || _waitAreas == null) return false;
+        if (IsTaken || IsLocked || _waitAreas == null) return false;
 
         LinkGroup group = Link != null ? Link.group : null;
         if (group != null && group.Count > 1) return TrySelectGroup(group);

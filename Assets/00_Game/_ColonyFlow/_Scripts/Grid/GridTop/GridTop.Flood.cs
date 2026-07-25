@@ -2,8 +2,14 @@ using UnityEngine;
 
 public partial class GridTop
 {
-    public bool HasBlock(int x, int y) =>
-        InBounds(x, y) && !string.IsNullOrEmpty(_colors[ColonyGridIndex.From(x, y, gridX)]);
+    public bool HasBlock(int x, int y)
+    {
+        if (!InBounds(x, y)) return false;
+
+        int index = ColonyGridIndex.From(x, y, gridX);
+        if (!string.IsNullOrEmpty(_colors[index])) return true;
+        return _keyColor != null && !string.IsNullOrEmpty(_keyColor[index]);
+    }
 
     public bool IsReachable(int x, int y) =>
         HasBlock(x, y) && ChooseApproach(x, y, out _);
@@ -34,6 +40,7 @@ public partial class GridTop
 
         Drain();
         RevealExposed();
+        UnlockExposedKeys();
     }
 
     void OpenCell(int x, int y)
@@ -43,10 +50,9 @@ public partial class GridTop
 
         Drain();
         RevealExposed();
+        UnlockExposedKeys();
     }
 
-    // Hidden food blocks reveal their real material once the flood (water) reaches
-    // them, i.e. once they become an "outer" reachable block.
     void RevealExposed()
     {
         if (_hiddenRemaining <= 0 || _hidden == null) return;
@@ -62,6 +68,42 @@ public partial class GridTop
             _hidden[index] = false;
             _hiddenRemaining--;
             if (_cells != null && _cells[index] != null) _cells[index].Reveal();
+        }
+    }
+
+    void UnlockExposedKeys()
+    {
+        if (_keyLockedRemaining <= 0 || _keyColor == null) return;
+
+        for (int index = 0; index < _keyColor.Length; index++)
+        {
+            if (string.IsNullOrEmpty(_keyColor[index])) continue;
+
+            FoodKey key = _keyObjects[index];
+            if (key == null || !key.IsLocked) continue;
+
+            int x = ColonyGridIndex.X(index, gridX);
+            int y = ColonyGridIndex.Y(index, gridX);
+            if (!IsReachable(x, y)) continue;
+
+            key.Unlock();
+            _keyLockedRemaining--;
+            FulfillPending(_keyColor[index], index);
+        }
+    }
+
+    void FulfillPending(string colorHex, int keyIndex)
+    {
+        if (_lockRequests.Count == 0 || string.IsNullOrEmpty(_keyColor[keyIndex])) return;
+
+        for (int r = 0; r < _lockRequests.Count; r++)
+        {
+            LockRequest request = _lockRequests[r];
+            if (!SameColor(request.color, colorHex)) continue;
+
+            _lockRequests.RemoveAt(r);
+            ConsumeKey(keyIndex, request.target, request.onDone);
+            return;
         }
     }
 

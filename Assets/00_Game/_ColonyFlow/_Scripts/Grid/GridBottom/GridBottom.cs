@@ -34,31 +34,35 @@ public partial class GridBottom : MonoBehaviour
         gridY = Mathf.Max(1, data.gridY);
         _slots = new Anthill[SlotCount];
 
-        if (anthill == null || data.colors == null) return;
+        if (anthill == null) return;
 
         Vector3 cell = CellSize;
         Quaternion rotation = anthill.transform.rotation;
 
-        foreach (KeyValuePair<string, Dictionary<int, int>> pair in data.colors)
+        if (data.colors != null)
         {
-            if (pair.Value == null) continue;
-
-            foreach (KeyValuePair<int, int> slot in pair.Value)
+            foreach (KeyValuePair<string, Dictionary<int, int>> pair in data.colors)
             {
-                int index = slot.Key;
-                if (index < 0 || index >= _slots.Length || _slots[index] != null) continue;
+                if (pair.Value == null) continue;
 
-                Anthill item = Instantiate(anthill, SlotCenter(index, cell), rotation, Holder);
-                item.Bind(this, index);
-                item.Setup(pair.Key, slot.Value, gridTop, waitAreas);
-                _slots[index] = item;
+                foreach (KeyValuePair<int, int> slot in pair.Value)
+                {
+                    int index = slot.Key;
+                    if (index < 0 || index >= _slots.Length || _slots[index] != null) continue;
+
+                    Anthill item = Instantiate(anthill, SlotCenter(index, cell), rotation, Holder);
+                    item.Bind(this, index);
+                    item.Setup(pair.Key, slot.Value, gridTop, waitAreas);
+                    _slots[index] = item;
+                }
             }
         }
 
         ApplyFlags(data.hiddens, ColonyMark.Hidden);
-        ApplyFlags(data.locks, ColonyMark.Lock);
+        ApplyLocks(data.locks, gridTop, waitAreas, cell, rotation);
         RefreshRows(true);
         ApplyLinks(data.links);
+        CheckRow0Locks();
     }
 
     enum ColonyMark { Hidden, Lock }
@@ -151,6 +155,58 @@ public partial class GridBottom : MonoBehaviour
             if (mark == ColonyMark.Hidden) item.SetHidden(true);
             else item.SetLocked(true);
         }
+    }
+
+    void ApplyLocks(Dictionary<string, List<int>> locks, GridTop gridTop, WaitAreas waitAreas, Vector3 cell, Quaternion rotation)
+    {
+        if (locks == null || anthill == null) return;
+
+        foreach (KeyValuePair<string, List<int>> pair in locks)
+        {
+            if (pair.Value == null) continue;
+
+            foreach (int index in pair.Value)
+            {
+                if (index < 0 || index >= _slots.Length) continue;
+
+                Anthill item = _slots[index];
+
+                // Lock chính là 1 anthill ở state Lock: nếu ô chưa có anthill (ô không tô màu)
+                // thì spawn 1 anthill trống (không kiến, capacity 0) chỉ để làm lock.
+                if (item == null)
+                {
+                    item = Instantiate(anthill, SlotCenter(index, cell), rotation, Holder);
+                    item.Bind(this, index);
+                    item.Setup(pair.Key, 0, gridTop, waitAreas);
+                    _slots[index] = item;
+                }
+
+                item.SetLocked(true, pair.Key);
+            }
+        }
+    }
+
+    void CheckRow0Locks()
+    {
+        if (_slots == null) return;
+
+        for (int x = 0; x < gridX; x++)
+        {
+            Anthill item = SlotAt(ColonyGridIndex.From(x, 0, gridX));
+            if (item != null && item.IsLocked) item.RequestKeyUnlock();
+        }
+    }
+
+    public void ConsumeLock(Anthill lockAnthill)
+    {
+        if (_slots == null || lockAnthill == null) return;
+
+        int index = System.Array.IndexOf(_slots, lockAnthill);
+        if (index >= 0) _slots[index] = null;
+
+        Destroy(lockAnthill.gameObject);
+
+        if (index >= 0) ShiftColumn(ColonyGridIndex.X(index, gridX));
     }
 
     public void Clear()

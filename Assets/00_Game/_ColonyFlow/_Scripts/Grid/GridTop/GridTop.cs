@@ -5,6 +5,7 @@ using UnityEngine;
 public partial class GridTop : MonoBehaviour
 {
     [BoxGroup("Refs")] public FoodObj foodObj;
+    [BoxGroup("Refs")] public FoodKey foodKey;
     [BoxGroup("Refs")] public Transform holder;
     [BoxGroup("Refs")] public Transform hole;
 
@@ -34,6 +35,18 @@ public partial class GridTop : MonoBehaviour
     [System.NonSerialized] bool[] _hidden;
     [System.NonSerialized] int _hiddenRemaining;
     [System.NonSerialized] FoodObj[] _cells;
+
+    [System.NonSerialized] string[] _keyColor;
+    [System.NonSerialized] FoodKey[] _keyObjects;
+    [System.NonSerialized] int _keyLockedRemaining;
+    readonly List<LockRequest> _lockRequests = new List<LockRequest>();
+
+    class LockRequest
+    {
+        public string color;
+        public Transform target;
+        public System.Action onDone;
+    }
 
     [System.NonSerialized] bool[] _open;
     [System.NonSerialized] int[] _cameFrom;
@@ -71,9 +84,16 @@ public partial class GridTop : MonoBehaviour
         _cells = new FoodObj[count];
         _remaining = 0;
 
+        _keyColor = new string[count];
+        _keyObjects = new FoodKey[count];
+        _keyLockedRemaining = 0;
+        _lockRequests.Clear();
+
         HashSet<int> hiddenSet = data.hiddens != null && data.hiddens.Count > 0
             ? new HashSet<int>(data.hiddens)
             : null;
+
+        HashSet<int> keySet = IndexSet(data.keys);
 
         Quaternion rotation = foodObj != null ? foodObj.transform.rotation : Quaternion.identity;
 
@@ -86,6 +106,7 @@ public partial class GridTop : MonoBehaviour
                 foreach (int index in pair.Value)
                 {
                     if (index < 0 || index >= count || !string.IsNullOrEmpty(_colors[index])) continue;
+                    if (keySet != null && keySet.Contains(index)) continue;
 
                     _colors[index] = pair.Key;
                     _remaining++;
@@ -110,7 +131,50 @@ public partial class GridTop : MonoBehaviour
             }
         }
 
+        SpawnKeys(data, count);
         RebuildOpen();
+    }
+
+    static HashSet<int> IndexSet(Dictionary<string, List<int>> groups)
+    {
+        if (groups == null || groups.Count == 0) return null;
+
+        HashSet<int> set = new HashSet<int>();
+        foreach (KeyValuePair<string, List<int>> pair in groups)
+        {
+            if (pair.Value == null) continue;
+            foreach (int index in pair.Value) set.Add(index);
+        }
+        return set.Count > 0 ? set : null;
+    }
+
+    void SpawnKeys(TopGridData data, int count)
+    {
+        if (foodKey == null || data.keys == null) return;
+
+        Quaternion rotation = foodKey.transform.rotation;
+
+        foreach (KeyValuePair<string, List<int>> pair in data.keys)
+        {
+            if (pair.Value == null) continue;
+
+            foreach (int index in pair.Value)
+            {
+                if (index < 0 || index >= count || !string.IsNullOrEmpty(_keyColor[index])) continue;
+
+                _keyColor[index] = pair.Key;
+
+                int x = ColonyGridIndex.X(index, gridX);
+                int y = ColonyGridIndex.Y(index, gridX);
+
+                FoodKey key = Instantiate(foodKey, CellWorld(x, y), rotation, Holder);
+                key.SetColor(pair.Key);
+                key.SetLocked(true);
+
+                _keyObjects[index] = key;
+                _keyLockedRemaining++;
+            }
+        }
     }
 
     public void Clear()
@@ -125,11 +189,25 @@ public partial class GridTop : MonoBehaviour
             }
         }
 
+        if (_keyObjects != null)
+        {
+            foreach (FoodKey key in _keyObjects)
+            {
+                if (key == null) continue;
+                if (Application.isPlaying) Destroy(key.gameObject);
+                else DestroyImmediate(key.gameObject);
+            }
+        }
+
         _colors = null;
         _reserved = null;
         _hidden = null;
         _hiddenRemaining = 0;
         _cells = null;
+        _keyColor = null;
+        _keyObjects = null;
+        _keyLockedRemaining = 0;
+        _lockRequests.Clear();
         _open = null;
         _cameFrom = null;
         _dist = null;
@@ -189,4 +267,62 @@ public partial class GridTop : MonoBehaviour
         _cells[index].Collect(ant);
         _cells[index] = null;
     }
+
+    public void RequestKey(string colorHex, Transform target, System.Action onDone)
+    {
+        if (string.IsNullOrEmpty(colorHex))
+        {
+            onDone?.Invoke();
+            return;
+        }
+
+        if (TryFlyKey(colorHex, target, onDone)) return;
+
+        _lockRequests.Add(new LockRequest { color = colorHex, target = target, onDone = onDone });
+    }
+
+    bool TryFlyKey(string colorHex, Transform target, System.Action onDone)
+    {
+        int index = FindUnlockedKey(colorHex);
+        if (index < 0) return false;
+
+        ConsumeKey(index, target, onDone);
+        return true;
+    }
+
+    int FindUnlockedKey(string colorHex)
+    {
+        if (_keyColor == null) return -1;
+
+        for (int i = 0; i < _keyColor.Length; i++)
+        {
+            if (!SameColor(_keyColor[i], colorHex)) continue;
+
+            FoodKey key = _keyObjects[i];
+            if (key != null && !key.IsLocked) return i;
+        }
+        return -1;
+    }
+
+    void ConsumeKey(int index, Transform target, System.Action onDone)
+    {
+        FoodKey key = _keyObjects[index];
+        _keyColor[index] = null;
+        _keyObjects[index] = null;
+
+        OpenCell(ColonyGridIndex.X(index, gridX), ColonyGridIndex.Y(index, gridX));
+
+        if (key != null && target != null)
+        {
+            key.Fly(target.position, () => onDone?.Invoke());
+        }
+        else
+        {
+            if (key != null) Destroy(key.gameObject);
+            onDone?.Invoke();
+        }
+    }
+
+    static bool SameColor(string a, string b) =>
+        !string.IsNullOrEmpty(a) && string.Equals(a, b, System.StringComparison.OrdinalIgnoreCase);
 }

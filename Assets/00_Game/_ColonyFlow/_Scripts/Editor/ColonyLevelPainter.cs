@@ -11,6 +11,7 @@ public enum ColonyPaintMode
     Hidden,
     Lock,
     Link,
+    Key,
 }
 
 public class ColonyLevelPainter : OdinEditorWindow
@@ -26,7 +27,6 @@ public class ColonyLevelPainter : OdinEditorWindow
     static readonly Color EmptyDark = new Color(0.13f, 0.13f, 0.13f, 1f);
     static readonly Color EmptyLight = new Color(0.24f, 0.24f, 0.24f, 1f);
     static readonly Color HiddenDot = new Color(0.04f, 0.04f, 0.04f, 1f);
-    static readonly Color LockDot = new Color(0.98f, 0.78f, 0.12f, 1f);
     static readonly Color GuideColor = new Color(1f, 1f, 1f, 0.35f);
     static readonly Color CenterGuideColor = new Color(1f, 1f, 1f, 0.8f);
     static readonly Color ModeOnColor = new Color(0.45f, 0.9f, 1f, 1f);
@@ -65,7 +65,7 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         Directory.CreateDirectory(directory);
         ColonyLevelData data = ColonyLevelData.FromCells(
-            _topCells, _topHidden, _topX, _topY,
+            _topCells, _topHidden, _topKeys, _topX, _topY,
             _botCells, _botCapacity, _botHidden, _botLock, _botLink, _botX, _botY);
         File.WriteAllText(path, ColonyLevelIO.ToJson(data));
 
@@ -96,6 +96,7 @@ public class ColonyLevelPainter : OdinEditorWindow
         _topY = Mathf.Clamp(data.top.gridY, 1, MaxGrid);
         _topCells = data.TopToCells();
         _topHidden = data.TopHiddenFlags();
+        _topKeys = data.TopKeysToCells();
 
         _botX = Mathf.Clamp(data.bottom.gridX, 1, MaxGrid);
         _botY = Mathf.Clamp(data.bottom.gridY, 1, MaxGrid);
@@ -117,13 +118,14 @@ public class ColonyLevelPainter : OdinEditorWindow
     [SerializeField, HideInInspector] int _topY = 24;
     [SerializeField, HideInInspector] string[] _topCells;
     [SerializeField, HideInInspector] bool[] _topHidden;
+    [SerializeField, HideInInspector] string[] _topKeys;
 
     [SerializeField, HideInInspector] int _botX = 4;
     [SerializeField, HideInInspector] int _botY = 2;
     [SerializeField, HideInInspector] string[] _botCells;
     [SerializeField, HideInInspector] int[] _botCapacity;
     [SerializeField, HideInInspector] bool[] _botHidden;
-    [SerializeField, HideInInspector] bool[] _botLock;
+    [SerializeField, HideInInspector] string[] _botLock;
     [SerializeField, HideInInspector] int[] _botLink;
 
     Rect[] _topRects;
@@ -218,6 +220,7 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         DrawModeButton(ColonyPaintMode.Color, "COLOR");
         DrawModeButton(ColonyPaintMode.Hidden, "HIDDEN");
+        DrawModeButton(ColonyPaintMode.Key, "KEY");
         DrawModeButton(ColonyPaintMode.Lock, "LOCK");
         DrawModeButton(ColonyPaintMode.Link, "LINK");
 
@@ -259,8 +262,9 @@ public class ColonyLevelPainter : OdinEditorWindow
 
     string HelpText() => _mode switch
     {
-        ColonyPaintMode.Hidden => "HIDDEN  •  Chuột trái: đánh dấu ẩn    •    Chuột phải: bỏ    •    Giữ và kéo để chọn nhiều ô",
-        ColonyPaintMode.Lock => "LOCK  •  Chuột trái: khoá ô    •    Chuột phải: mở    •    Giữ và kéo để chọn nhiều ô",
+        ColonyPaintMode.Hidden => "HIDDEN  •  Chuột trái: đánh dấu ẩn (Top & Bottom)    •    Chuột phải: bỏ    •    Giữ và kéo để chọn nhiều ô",
+        ColonyPaintMode.Key => $"KEY  •  Chuột trái: đặt key màu {ColonyPalette.NameAt(_brush)} lên ô Grid Top    •    Chuột phải: bỏ key",
+        ColonyPaintMode.Lock => $"LOCK  •  Chuột trái: khoá ô Grid Bottom bằng màu {ColonyPalette.NameAt(_brush)} (hiện chữ Lock)    •    Chuột phải: mở",
         ColonyPaintMode.Link => $"LINK #{_linkId}  •  Chuột trái: nối ô vào nhóm {_linkId}    •    Chuột phải: bỏ khỏi nhóm",
         _ => "COLOR  •  Chuột trái: tô màu    •    Chuột phải: xoá ô    •    Giữ và kéo để tô liên tục",
     };
@@ -280,6 +284,7 @@ public class ColonyLevelPainter : OdinEditorWindow
         {
             _topCells = Resize(_topCells, _topX, _topY, nextX, nextY);
             _topHidden = Resize(_topHidden, _topX, _topY, nextX, nextY);
+            _topKeys = Resize(_topKeys, _topX, _topY, nextX, nextY);
             _topX = nextX;
             _topY = nextY;
         }
@@ -288,7 +293,7 @@ public class ColonyLevelPainter : OdinEditorWindow
         DrawGrid(_topX, _topY, _topCells, null, _cellSize, false);
         DrawGuides(_topX, _topY, _topRects);
         EditorGUILayout.Space(2f);
-        EditorGUILayout.LabelField($"Đã tô {PaintedCount(_topCells)} / {_topCells.Length} ô    •    Hidden {CountFlags(_topHidden)}", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Đã tô {PaintedCount(_topCells)} / {_topCells.Length} ô    •    Hidden {CountFlags(_topHidden)}    •    Key {PaintedCount(_topKeys)}", EditorStyles.miniLabel);
         EditorGUILayout.EndVertical();
     }
 
@@ -328,13 +333,15 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         int totalCapacity = 0;
         for (int i = 0; i < _botCapacity.Length; i++)
-            if (!string.IsNullOrEmpty(_botCells[i])) totalCapacity += _botCapacity[i];
+            if (Usable(i)) totalCapacity += _botCapacity[i];
 
-        int painted = PaintedCount(_topCells);
-        EditorGUILayout.LabelField($"Tổng capacity {totalCapacity} / {painted} ô top", EditorStyles.miniLabel);
-        EditorGUILayout.LabelField($"Hidden {CountFlags(_botHidden)}    Lock {CountFlags(_botLock)}    Link {LinkGroups().Count} nhóm", EditorStyles.miniLabel);
-        if (totalCapacity != painted)
-            EditorGUILayout.HelpBox("Capacity không khớp số ô ở Grid Top.", MessageType.Warning);
+        int painted = TopFoodCount();
+        EditorGUILayout.LabelField($"Tổng capacity {totalCapacity} / {painted} ô top  (ô lock/key không tính)", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Hidden {CountFlags(_botHidden)}    Lock {PaintedCount(_botLock)}    Link {LinkGroups().Count} nhóm", EditorStyles.miniLabel);
+
+        string mismatch = ColorMismatch();
+        if (mismatch != null)
+            EditorGUILayout.HelpBox("Capacity không khớp Grid Top:\n" + mismatch, MessageType.Warning);
 
         EditorGUILayout.EndVertical();
     }
@@ -377,18 +384,25 @@ public class ColonyLevelPainter : OdinEditorWindow
     {
         string hex = cells[index];
         bool painted = !string.IsNullOrEmpty(hex);
-        Color fill = painted ? ColonyPalette.ToColor(hex) : EmptyColor;
+
+        string keyHex = bottom ? null : _topKeys[index];
+        bool hasKey = !string.IsNullOrEmpty(keyHex);
+
+        string lockHex = bottom ? _botLock[index] : null;
+        bool locked = !string.IsNullOrEmpty(lockHex);
+
         Rect inner = rect;
+        Color fill = painted ? ColonyPalette.ToColor(hex) : EmptyColor;
 
         if (bottom)
         {
             EditorGUI.DrawRect(rect, BorderColor);
             inner = new Rect(rect.x + 1f, rect.y + 1f, rect.width - 2f, rect.height - 2f);
-            EditorGUI.DrawRect(inner, fill);
+            EditorGUI.DrawRect(inner, locked ? EmptyColor : fill);
         }
         else
         {
-            if (!painted) fill = alt ? EmptyLight : EmptyDark;
+            if (!painted || hasKey) fill = alt ? EmptyLight : EmptyDark;
             else if (alt) fill = new Color(fill.r * CheckerShade, fill.g * CheckerShade, fill.b * CheckerShade, 1f);
 
             EditorGUI.DrawRect(rect, fill);
@@ -396,6 +410,23 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         if (bottom && _botLink[index] > 0)
             DrawFrame(inner, LinkColor(_botLink[index]), Mathf.Max(2f, cellSize * 0.08f));
+
+        // Key / Lock: hình tròn kín ô, có viền
+        Color discColor = default;
+        bool hasDisc = false;
+
+        if (hasKey)
+        {
+            discColor = ColonyPalette.ToColor(keyHex);
+            DrawDisc(rect.center, cellSize * 0.44f, discColor, BorderColor, Mathf.Max(1.5f, cellSize * 0.09f));
+            hasDisc = true;
+        }
+        else if (locked)
+        {
+            discColor = ColonyPalette.ToColor(lockHex);
+            DrawDisc(inner.center, Mathf.Min(inner.width, inner.height) * 0.46f, discColor, BorderColor, Mathf.Max(1.5f, cellSize * 0.06f));
+            hasDisc = true;
+        }
 
         if (cellSize < 15f) return;
 
@@ -406,23 +437,40 @@ public class ColonyLevelPainter : OdinEditorWindow
 
             if (_botHidden[index])
                 DrawDot(new Vector2(inner.xMax - margin, inner.yMax - margin), radius, HiddenDot);
-            if (_botLock[index])
-                DrawDot(new Vector2(inner.xMax - margin, inner.y + margin), radius, LockDot);
         }
-        else if (_topHidden[index])
+        else if (!hasKey && _topHidden[index])
         {
             float radius = Mathf.Clamp(cellSize * 0.18f, 2.5f, 6f);
             DrawDot(rect.center, radius, HiddenDot);
         }
 
         string label = null;
-        if (capacity != null && painted) label = capacity[index].ToString();
+        if (bottom && locked) label = "Lock";
+        else if (capacity != null && painted) label = capacity[index].ToString();
         else if (_showIndex) label = index.ToString();
         if (label == null) return;
 
-        CellLabel.fontSize = Mathf.Clamp(Mathf.RoundToInt(cellSize * 0.44f), 7, 16);
-        CellLabel.normal.textColor = Luminance(fill) > 0.55f ? Color.black : Color.white;
+        CellLabel.fontSize = bottom && locked
+            ? Mathf.Clamp(Mathf.RoundToInt(cellSize * 0.30f), 7, 14)
+            : Mathf.Clamp(Mathf.RoundToInt(cellSize * 0.44f), 7, 16);
+        CellLabel.normal.textColor = Luminance(hasDisc ? discColor : fill) > 0.55f ? Color.black : Color.white;
         GUI.Label(rect, label, CellLabel);
+    }
+
+    static void DrawDisc(Vector2 center, float radius, Color fill, Color border, float borderThickness)
+    {
+        if (Event.current.type != EventType.Repaint) return;
+
+        Color previous = Handles.color;
+        Vector3 position = new Vector3(center.x, center.y, 0f);
+
+        Handles.color = border;
+        Handles.DrawSolidDisc(position, Vector3.forward, radius);
+
+        Handles.color = fill;
+        Handles.DrawSolidDisc(position, Vector3.forward, Mathf.Max(0.5f, radius - borderThickness));
+
+        Handles.color = previous;
     }
 
     static void DrawDot(Vector2 center, float radius, Color color)
@@ -536,23 +584,28 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         bool paint = current.button == 0;
 
-        if (!bottom && _mode == ColonyPaintMode.Hidden)
+        if (!bottom)
         {
-            _topHidden[index] = paint;
-        }
-        else if (!bottom || _mode == ColonyPaintMode.Color)
-        {
-            if (paint)
+            switch (_mode)
             {
-                cells[index] = ColonyPalette.HexAt(_brush);
-                if (capacity != null) capacity[index] = _capacityValue;
-            }
-            else
-            {
-                cells[index] = null;
-                if (capacity != null) capacity[index] = 0;
-                if (bottom) ClearMarks(index);
-                else _topHidden[index] = false;
+                case ColonyPaintMode.Hidden:
+                    _topHidden[index] = paint;
+                    break;
+                case ColonyPaintMode.Key:
+                    _topKeys[index] = paint ? ColonyPalette.HexAt(_brush) : null;
+                    break;
+                default:
+                    if (paint)
+                    {
+                        cells[index] = ColonyPalette.HexAt(_brush);
+                    }
+                    else
+                    {
+                        cells[index] = null;
+                        _topHidden[index] = false;
+                        _topKeys[index] = null;
+                    }
+                    break;
             }
         }
         else
@@ -560,8 +613,22 @@ public class ColonyLevelPainter : OdinEditorWindow
             switch (_mode)
             {
                 case ColonyPaintMode.Hidden: _botHidden[index] = paint; break;
-                case ColonyPaintMode.Lock: _botLock[index] = paint; break;
+                case ColonyPaintMode.Lock: _botLock[index] = paint ? ColonyPalette.HexAt(_brush) : null; break;
                 case ColonyPaintMode.Link: _botLink[index] = paint ? _linkId : 0; break;
+                case ColonyPaintMode.Key: break;
+                default:
+                    if (paint)
+                    {
+                        cells[index] = ColonyPalette.HexAt(_brush);
+                        if (capacity != null) capacity[index] = _capacityValue;
+                    }
+                    else
+                    {
+                        cells[index] = null;
+                        if (capacity != null) capacity[index] = 0;
+                        ClearMarks(index);
+                    }
+                    break;
             }
         }
 
@@ -572,8 +639,58 @@ public class ColonyLevelPainter : OdinEditorWindow
     void ClearMarks(int index)
     {
         _botHidden[index] = false;
-        _botLock[index] = false;
+        _botLock[index] = null;
         _botLink[index] = 0;
+    }
+
+    // Một ô bottom chỉ dùng được (sinh kiến, tính capacity) khi có màu và không bị lock.
+    bool Usable(int index) =>
+        !string.IsNullOrEmpty(_botCells[index]) && string.IsNullOrEmpty(_botLock[index]);
+
+    // Ô key không sinh food nên không tính là food ở Grid Top.
+    int TopFoodCount()
+    {
+        int count = 0;
+        for (int i = 0; i < _topCells.Length; i++)
+            if (!string.IsNullOrEmpty(_topCells[i]) && string.IsNullOrEmpty(_topKeys[i])) count++;
+        return count;
+    }
+
+    string ColorMismatch()
+    {
+        Dictionary<string, int> required = new Dictionary<string, int>();
+        for (int i = 0; i < _topCells.Length; i++)
+        {
+            string hex = _topCells[i];
+            if (string.IsNullOrEmpty(hex) || !string.IsNullOrEmpty(_topKeys[i])) continue;
+            required.TryGetValue(hex, out int count);
+            required[hex] = count + 1;
+        }
+
+        Dictionary<string, int> provided = new Dictionary<string, int>();
+        for (int i = 0; i < _botCells.Length; i++)
+        {
+            if (!Usable(i)) continue;
+            string hex = _botCells[i];
+            provided.TryGetValue(hex, out int count);
+            provided[hex] = count + _botCapacity[i];
+        }
+
+        SortedSet<string> colors = new SortedSet<string>(required.Keys);
+        colors.UnionWith(provided.Keys);
+
+        List<string> issues = new List<string>();
+        foreach (string hex in colors)
+        {
+            required.TryGetValue(hex, out int need);
+            provided.TryGetValue(hex, out int have);
+            if (need == have) continue;
+
+            string name = ColonyPalette.NameAt(ColonyPalette.IndexOf(hex));
+            issues.Add($"{name} {have}/{need}");
+        }
+
+        return issues.Count == 0 ? null : string.Join("     ", issues);
     }
 
     void AutoCapacity()
@@ -581,9 +698,10 @@ public class ColonyLevelPainter : OdinEditorWindow
         EnsureArrays();
 
         Dictionary<string, int> totals = new Dictionary<string, int>();
-        foreach (string hex in _topCells)
+        for (int i = 0; i < _topCells.Length; i++)
         {
-            if (string.IsNullOrEmpty(hex)) continue;
+            string hex = _topCells[i];
+            if (string.IsNullOrEmpty(hex) || !string.IsNullOrEmpty(_topKeys[i])) continue;
             totals.TryGetValue(hex, out int count);
             totals[hex] = count + 1;
         }
@@ -591,12 +709,13 @@ public class ColonyLevelPainter : OdinEditorWindow
         Dictionary<string, List<int>> slots = new Dictionary<string, List<int>>();
         for (int i = 0; i < _botCells.Length; i++)
         {
-            string hex = _botCells[i];
-            if (string.IsNullOrEmpty(hex))
+            if (!Usable(i))
             {
                 _botCapacity[i] = 0;
                 continue;
             }
+
+            string hex = _botCells[i];
             if (!slots.TryGetValue(hex, out List<int> list))
             {
                 list = new List<int>();
@@ -630,6 +749,8 @@ public class ColonyLevelPainter : OdinEditorWindow
             _topCells = Resize(_topCells, _topX, _topY, _topX, _topY);
         if (_topHidden == null || _topHidden.Length != _topX * _topY)
             _topHidden = Resize(_topHidden, _topX, _topY, _topX, _topY);
+        if (_topKeys == null || _topKeys.Length != _topX * _topY)
+            _topKeys = Resize(_topKeys, _topX, _topY, _topX, _topY);
         if (_botCells == null || _botCells.Length != _botX * _botY)
             _botCells = Resize(_botCells, _botX, _botY, _botX, _botY);
         if (_botCapacity == null || _botCapacity.Length != _botX * _botY)

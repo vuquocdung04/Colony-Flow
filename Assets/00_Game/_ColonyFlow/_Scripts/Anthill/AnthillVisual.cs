@@ -97,6 +97,13 @@ public class AnthillVisual : MonoBehaviour
         if (lockView != null) lockView.SetLocked(value);
     }
 
+    public void SetLockColor(Color color)
+    {
+        if (lockView != null) lockView.SetColor(color);
+    }
+
+    public Transform LockTarget => lockView != null ? lockView.Target : Root;
+
     public void OnReachRow0()
     {
         if (hidden != null && hidden.TryUnlock(true) && linkView != null) linkView.RefreshAllLooks();

@@ -14,6 +14,7 @@ public class TopGridData
     [JsonProperty("gridY")] public int gridY = 24;
     [JsonProperty("colors")] public Dictionary<string, List<int>> colors = new Dictionary<string, List<int>>();
     [JsonProperty("hiddens")] public List<int> hiddens = new List<int>();
+    [JsonProperty("keys")] public Dictionary<string, List<int>> keys = new Dictionary<string, List<int>>();
 }
 
 public class BottomGridData
@@ -22,7 +23,7 @@ public class BottomGridData
     [JsonProperty("gridY")] public int gridY = 2;
     [JsonProperty("colors")] public Dictionary<string, Dictionary<int, int>> colors = new Dictionary<string, Dictionary<int, int>>();
     [JsonProperty("hiddens")] public List<int> hiddens = new List<int>();
-    [JsonProperty("locks")] public List<int> locks = new List<int>();
+    [JsonProperty("locks")] public Dictionary<string, List<int>> locks = new Dictionary<string, List<int>>();
     [JsonProperty("links")] public List<List<int>> links = new List<List<int>>();
 }
 
@@ -31,9 +32,9 @@ public class ColonyLevelData
     [JsonProperty("top")] public TopGridData top = new TopGridData();
     [JsonProperty("bottom")] public BottomGridData bottom = new BottomGridData();
 
-    public static ColonyLevelData FromCells(string[] topCells, bool[] topHidden, int topX, int topY,
+    public static ColonyLevelData FromCells(string[] topCells, bool[] topHidden, string[] topKeys, int topX, int topY,
                                             string[] bottomCells, int[] bottomCapacity,
-                                            bool[] bottomHidden, bool[] bottomLock, int[] bottomLink,
+                                            bool[] bottomHidden, string[] bottomLock, int[] bottomLink,
                                             int bottomX, int bottomY)
     {
         ColonyLevelData data = new ColonyLevelData();
@@ -41,6 +42,7 @@ public class ColonyLevelData
         data.top.gridX = topX;
         data.top.gridY = topY;
         data.top.hiddens = Flags(topHidden);
+        data.top.keys = ColorGroups(topKeys);
         if (topCells != null)
         {
             for (int i = 0; i < topCells.Length; i++)
@@ -74,25 +76,15 @@ public class ColonyLevelData
         }
 
         data.bottom.hiddens = Flags(bottomHidden);
-        data.bottom.locks = Flags(bottomLock);
+        data.bottom.locks = ColorGroups(bottomLock);
         data.bottom.links = Groups(bottomLink);
 
         return data;
     }
 
-    public string[] TopToCells()
-    {
-        string[] cells = new string[AtLeastOne(top.gridX) * AtLeastOne(top.gridY)];
-        if (top.colors == null) return cells;
+    public string[] TopToCells() => CellsFrom(top.colors, top.gridX, top.gridY);
 
-        foreach (KeyValuePair<string, List<int>> pair in top.colors)
-        {
-            if (pair.Value == null) continue;
-            foreach (int index in pair.Value)
-                if (index >= 0 && index < cells.Length) cells[index] = pair.Key;
-        }
-        return cells;
-    }
+    public string[] TopKeysToCells() => CellsFrom(top.keys, top.gridX, top.gridY);
 
     public bool[] TopHiddenFlags()
     {
@@ -102,13 +94,12 @@ public class ColonyLevelData
     }
 
     public void BottomToCells(out string[] cells, out int[] capacity,
-                              out bool[] hidden, out bool[] locks, out int[] links)
+                              out bool[] hidden, out string[] locks, out int[] links)
     {
         int count = AtLeastOne(bottom.gridX) * AtLeastOne(bottom.gridY);
         cells = new string[count];
         capacity = new int[count];
         hidden = new bool[count];
-        locks = new bool[count];
         links = new int[count];
 
         if (bottom.colors != null)
@@ -126,7 +117,7 @@ public class ColonyLevelData
         }
 
         ApplyFlags(bottom.hiddens, hidden);
-        ApplyFlags(bottom.locks, locks);
+        locks = ColorCells(bottom.locks, count);
 
         if (bottom.links == null) return;
 
@@ -138,6 +129,54 @@ public class ColonyLevelData
             foreach (int index in members)
                 if (index >= 0 && index < count) links[index] = group + 1;
         }
+    }
+
+    static string[] CellsFrom(Dictionary<string, List<int>> colors, int gridX, int gridY)
+    {
+        string[] cells = new string[AtLeastOne(gridX) * AtLeastOne(gridY)];
+        if (colors == null) return cells;
+
+        foreach (KeyValuePair<string, List<int>> pair in colors)
+        {
+            if (pair.Value == null) continue;
+            foreach (int index in pair.Value)
+                if (index >= 0 && index < cells.Length) cells[index] = pair.Key;
+        }
+        return cells;
+    }
+
+    static string[] ColorCells(Dictionary<string, List<int>> colors, int count)
+    {
+        string[] cells = new string[count];
+        if (colors == null) return cells;
+
+        foreach (KeyValuePair<string, List<int>> pair in colors)
+        {
+            if (pair.Value == null) continue;
+            foreach (int index in pair.Value)
+                if (index >= 0 && index < count) cells[index] = pair.Key;
+        }
+        return cells;
+    }
+
+    static Dictionary<string, List<int>> ColorGroups(string[] source)
+    {
+        Dictionary<string, List<int>> groups = new Dictionary<string, List<int>>();
+        if (source == null) return groups;
+
+        for (int i = 0; i < source.Length; i++)
+        {
+            string hex = source[i];
+            if (string.IsNullOrEmpty(hex)) continue;
+
+            if (!groups.TryGetValue(hex, out List<int> list))
+            {
+                list = new List<int>();
+                groups[hex] = list;
+            }
+            list.Add(i);
+        }
+        return groups;
     }
 
     static List<int> Flags(bool[] source)
