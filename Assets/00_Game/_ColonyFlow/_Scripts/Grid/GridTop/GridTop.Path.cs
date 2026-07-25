@@ -9,7 +9,7 @@ public partial class GridTop
         return Holder.TransformPoint(EntryPointLocal(target));
     }
 
-    public void BuildApproachPath(Vector3 fromWorld, GridTarget target, List<Vector3> path)
+    public int BuildApproachPath(Vector3 fromWorld, GridTarget target, List<Vector3> path)
     {
         EnsureLayout();
 
@@ -18,32 +18,29 @@ public partial class GridTop
 
         Vector3 boundary = AppendStraightEntry(fromWorld, path);
         AppendPerimeter(boundary, mouth, path);
+
+        int mouthIndex = path.Count;
         path.Add(mouth);
         for (int i = 0; i < _corridor.Count; i++) path.Add(_corridor[i]);
         path.Add(CellWorld(target.x, target.y));
+
+        return mouthIndex;
     }
 
-    public void BuildExitPath(GridTarget target, Vector3 toWorld, List<Vector3> path)
+    public void BuildReturnPath(List<Vector3> entryPath, int mouthIndex, Vector3 toWorld, List<Vector3> path)
     {
         EnsureLayout();
 
-        int index = ColonyGridIndex.From(target.x, target.y, gridX);
-        Vector3 mouth;
-
-        if (_open != null && index >= 0 && index < _open.Length && _open[index])
+        if (entryPath == null || mouthIndex < 0 || mouthIndex >= entryPath.Count)
         {
-            TraceToBorder(index, out int borderIndex, out _);
-            for (int i = 0; i < _chain.Count; i++)
-                path.Add(CellWorld(ColonyGridIndex.X(_chain[i], gridX), ColonyGridIndex.Y(_chain[i], gridX)));
-            mouth = Holder.TransformPoint(ExteriorMouthLocal(ColonyGridIndex.X(borderIndex, gridX), ColonyGridIndex.Y(borderIndex, gridX)));
-        }
-        else
-        {
-            mouth = NearestExit(target.x, target.y);
+            path.Add(toWorld);
+            return;
         }
 
-        path.Add(mouth);
-        AppendPerimeter(mouth, toWorld, path);
+        for (int i = entryPath.Count - 2; i >= mouthIndex; i--)
+            path.Add(entryPath[i]);
+
+        AppendPerimeter(entryPath[mouthIndex], toWorld, path);
         path.Add(toWorld);
     }
 
@@ -112,17 +109,6 @@ public partial class GridTop
             case GridApproach.Top: return CellLocal(target.x, -1);
             default: return CellLocal(target.x, gridY);
         }
-    }
-
-    Vector3 NearestExit(int x, int y)
-    {
-        int toTop = y, toBottom = gridY - 1 - y, toLeft = x, toRight = gridX - 1 - x;
-        int nearest = Mathf.Min(Mathf.Min(toTop, toBottom), Mathf.Min(toLeft, toRight));
-
-        if (nearest == toBottom) return CellWorld(x, gridY);
-        if (nearest == toRight) return CellWorld(gridX, y);
-        if (nearest == toLeft) return CellWorld(-1, y);
-        return CellWorld(x, -1);
     }
 
     Vector3 AppendStraightEntry(Vector3 fromWorld, List<Vector3> path)

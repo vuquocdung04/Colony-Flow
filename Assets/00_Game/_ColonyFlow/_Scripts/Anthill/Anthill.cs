@@ -22,7 +22,7 @@ public class Anthill : MonoBehaviour
     public AnthillState State { get; private set; } = AnthillState.Sleep;
 
     public string ColorHex { get; private set; }
-    public int Capacity { get; private set; }
+    public int Capacity => _spawner != null ? _spawner.Remaining : 0;
     public bool IsTaken { get; private set; }
 
     public bool IsHidden { get; private set; }
@@ -33,10 +33,9 @@ public class Anthill : MonoBehaviour
     GridBottom _board;
     GridTop _grid;
     WaitAreas _waitAreas;
+    AntSpawner _spawner;
     Tween _move;
-    bool _spawning;
     bool _keyRequested;
-    float _timer;
 
     public Transform LockTarget => visual != null ? visual.LockTarget : transform;
 
@@ -67,14 +66,16 @@ public class Anthill : MonoBehaviour
     {
         _grid = grid;
         _waitAreas = areas;
-        Capacity = Mathf.Max(0, capacity);
+        _spawner ??= new AntSpawner(antPrefab, spawnPoint, transform, spawnInterval,
+                                    RefreshLabel, TryDestroy);
         SetColor(hex);
-        RefreshLabel();
+        _spawner.Setup(grid, hex, capacity);
     }
 
     public void SetColor(string hex)
     {
         ColorHex = hex;
+        _spawner?.SetColor(hex);
         if (visual != null) visual.SetColor(hex);
     }
 
@@ -197,7 +198,7 @@ public class Anthill : MonoBehaviour
         return true;
     }
 
-    void BeginSpawn() => _spawning = true;
+    void BeginSpawn() => _spawner?.Begin();
 
     public bool CanDestroy()
     {
@@ -228,32 +229,10 @@ public class Anthill : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void Tick(float delta)
+    public void Tick(float delta) => _spawner?.Tick(delta);
+
+    void RefreshLabel(int capacity)
     {
-        if (!_spawning || Capacity <= 0 || _grid == null || antPrefab == null) return;
-
-        _timer -= delta;
-        if (_timer > 0f) return;
-        _timer = spawnInterval;
-
-        Vector3 position = spawnPoint != null ? spawnPoint.position : transform.position;
-        if (!_grid.TryReserve(ColorHex, position, out GridTarget target)) return;
-
-        Ant ant = Instantiate(antPrefab, position, antPrefab.transform.rotation);
-        ant.SetColor(ColorHex);
-        ant.Init(_grid, target);
-
-        Capacity--;
-        RefreshLabel();
-
-        if (Capacity > 0) return;
-
-        _spawning = false;
-        TryDestroy();
-    }
-
-    void RefreshLabel()
-    {
-        if (visual != null) visual.SetCapacity(Capacity);
+        if (visual != null) visual.SetCapacity(capacity);
     }
 }

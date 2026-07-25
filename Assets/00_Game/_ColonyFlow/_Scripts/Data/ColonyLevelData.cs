@@ -8,6 +8,57 @@ public static class ColonyGridIndex
     public static int Y(int index, int gridX) => index / gridX;
 }
 
+[System.Serializable]
+public class ColonyRegion
+{
+    public int x0;
+    public int y0;
+    public int x1;
+    public int y1;
+    public string color;
+    public int capacity;
+
+    public bool Contains(int x, int y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
+
+    public bool Overlaps(ColonyRegion other) =>
+        other != null && x0 <= other.x1 && other.x0 <= x1 && y0 <= other.y1 && other.y0 <= y1;
+
+    public List<int> Indices(int gridX)
+    {
+        List<int> list = new List<int>();
+        for (int y = y0; y <= y1; y++)
+            for (int x = x0; x <= x1; x++)
+                list.Add(ColonyGridIndex.From(x, y, gridX));
+        return list;
+    }
+
+    public static ColonyRegion FromCorners(int ax, int ay, int bx, int by) => new ColonyRegion
+    {
+        x0 = ax < bx ? ax : bx,
+        y0 = ay < by ? ay : by,
+        x1 = ax > bx ? ax : bx,
+        y1 = ay > by ? ay : by,
+    };
+
+    public static ColonyRegion FromIndices(List<int> indices, int gridX)
+    {
+        if (indices == null || indices.Count == 0 || gridX <= 0) return null;
+
+        int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+        foreach (int index in indices)
+        {
+            int x = ColonyGridIndex.X(index, gridX);
+            int y = ColonyGridIndex.Y(index, gridX);
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+        }
+
+        return new ColonyRegion { x0 = minX, y0 = minY, x1 = maxX, y1 = maxY };
+    }
+}
+
 public class TopGridData
 {
     [JsonProperty("gridX")] public int gridX = 24;
@@ -15,6 +66,8 @@ public class TopGridData
     [JsonProperty("colors")] public Dictionary<string, List<int>> colors = new Dictionary<string, List<int>>();
     [JsonProperty("hiddens")] public List<int> hiddens = new List<int>();
     [JsonProperty("keys")] public Dictionary<string, List<int>> keys = new Dictionary<string, List<int>>();
+    [JsonProperty("hungryDoor")] public Dictionary<string, Dictionary<int, List<List<int>>>> hungryDoor = new Dictionary<string, Dictionary<int, List<List<int>>>>();
+    [JsonProperty("cookie")] public Dictionary<int, List<List<int>>> cookie = new Dictionary<int, List<List<int>>>();
 }
 
 public class BottomGridData
@@ -32,7 +85,9 @@ public class ColonyLevelData
     [JsonProperty("top")] public TopGridData top = new TopGridData();
     [JsonProperty("bottom")] public BottomGridData bottom = new BottomGridData();
 
-    public static ColonyLevelData FromCells(string[] topCells, bool[] topHidden, string[] topKeys, int topX, int topY,
+    public static ColonyLevelData FromCells(string[] topCells, bool[] topHidden, string[] topKeys,
+                                            List<ColonyRegion> topDoors, List<ColonyRegion> topCookies,
+                                            int topX, int topY,
                                             string[] bottomCells, int[] bottomCapacity,
                                             bool[] bottomHidden, string[] bottomLock, int[] bottomLink,
                                             int bottomX, int bottomY)
@@ -43,6 +98,8 @@ public class ColonyLevelData
         data.top.gridY = topY;
         data.top.hiddens = Flags(topHidden);
         data.top.keys = ColorGroups(topKeys);
+        data.top.hungryDoor = DoorGroups(topDoors, topX);
+        data.top.cookie = CookieGroups(topCookies, topX);
         if (topCells != null)
         {
             for (int i = 0; i < topCells.Length; i++)
@@ -85,6 +142,56 @@ public class ColonyLevelData
     public string[] TopToCells() => CellsFrom(top.colors, top.gridX, top.gridY);
 
     public string[] TopKeysToCells() => CellsFrom(top.keys, top.gridX, top.gridY);
+
+    public List<ColonyRegion> TopDoorRegions()
+    {
+        List<ColonyRegion> regions = new List<ColonyRegion>();
+        if (top.hungryDoor == null) return regions;
+
+        foreach (KeyValuePair<string, Dictionary<int, List<List<int>>>> byColor in top.hungryDoor)
+        {
+            if (byColor.Value == null) continue;
+
+            foreach (KeyValuePair<int, List<List<int>>> byCapacity in byColor.Value)
+            {
+                if (byCapacity.Value == null) continue;
+
+                foreach (List<int> cells in byCapacity.Value)
+                {
+                    ColonyRegion region = ColonyRegion.FromIndices(cells, top.gridX);
+                    if (region == null) continue;
+
+                    region.color = byColor.Key;
+                    region.capacity = byCapacity.Key;
+                    regions.Add(region);
+                }
+            }
+        }
+
+        return regions;
+    }
+
+    public List<ColonyRegion> TopCookieRegions()
+    {
+        List<ColonyRegion> regions = new List<ColonyRegion>();
+        if (top.cookie == null) return regions;
+
+        foreach (KeyValuePair<int, List<List<int>>> byCapacity in top.cookie)
+        {
+            if (byCapacity.Value == null) continue;
+
+            foreach (List<int> cells in byCapacity.Value)
+            {
+                ColonyRegion region = ColonyRegion.FromIndices(cells, top.gridX);
+                if (region == null) continue;
+
+                region.capacity = byCapacity.Key;
+                regions.Add(region);
+            }
+        }
+
+        return regions;
+    }
 
     public bool[] TopHiddenFlags()
     {
@@ -157,6 +264,66 @@ public class ColonyLevelData
                 if (index >= 0 && index < count) cells[index] = pair.Key;
         }
         return cells;
+    }
+
+    static Dictionary<string, Dictionary<int, List<List<int>>>> DoorGroups(List<ColonyRegion> regions, int gridX)
+    {
+        Dictionary<string, Dictionary<int, List<List<int>>>> groups =
+            new Dictionary<string, Dictionary<int, List<List<int>>>>();
+        if (regions == null) return groups;
+
+        foreach (ColonyRegion region in Sorted(regions))
+        {
+            if (region == null || string.IsNullOrEmpty(region.color)) continue;
+
+            if (!groups.TryGetValue(region.color, out Dictionary<int, List<List<int>>> byCapacity))
+            {
+                byCapacity = new Dictionary<int, List<List<int>>>();
+                groups[region.color] = byCapacity;
+            }
+
+            if (!byCapacity.TryGetValue(region.capacity, out List<List<int>> list))
+            {
+                list = new List<List<int>>();
+                byCapacity[region.capacity] = list;
+            }
+
+            list.Add(region.Indices(gridX));
+        }
+
+        return groups;
+    }
+
+    static Dictionary<int, List<List<int>>> CookieGroups(List<ColonyRegion> regions, int gridX)
+    {
+        Dictionary<int, List<List<int>>> groups = new Dictionary<int, List<List<int>>>();
+        if (regions == null) return groups;
+
+        foreach (ColonyRegion region in Sorted(regions))
+        {
+            if (region == null) continue;
+
+            if (!groups.TryGetValue(region.capacity, out List<List<int>> list))
+            {
+                list = new List<List<int>>();
+                groups[region.capacity] = list;
+            }
+
+            list.Add(region.Indices(gridX));
+        }
+
+        return groups;
+    }
+
+    static List<ColonyRegion> Sorted(List<ColonyRegion> regions)
+    {
+        List<ColonyRegion> copy = new List<ColonyRegion>(regions);
+        copy.Sort((a, b) =>
+        {
+            if (a == null || b == null) return 0;
+            return a.capacity != b.capacity ? a.capacity.CompareTo(b.capacity) : a.y0 != b.y0 ? a.y0.CompareTo(b.y0) : a.x0.CompareTo(b.x0);
+        });
+        return copy;
     }
 
     static Dictionary<string, List<int>> ColorGroups(string[] source)

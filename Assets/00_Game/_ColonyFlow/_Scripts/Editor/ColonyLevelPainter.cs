@@ -12,6 +12,8 @@ public enum ColonyPaintMode
     Lock,
     Link,
     Key,
+    HungryDoor,
+    Cookie,
 }
 
 public class ColonyLevelPainter : OdinEditorWindow
@@ -30,6 +32,10 @@ public class ColonyLevelPainter : OdinEditorWindow
     static readonly Color GuideColor = new Color(1f, 1f, 1f, 0.35f);
     static readonly Color CenterGuideColor = new Color(1f, 1f, 1f, 0.8f);
     static readonly Color ModeOnColor = new Color(0.45f, 0.9f, 1f, 1f);
+    static readonly Color CookieColor = new Color(0.85f, 0.62f, 0.32f, 1f);
+
+    const float RegionFillAlpha = 0.65f;
+    const int CookieSize = 2;
 
     [MenuItem("Tools/Colony Flow/Level Painter")]
     static void Open()
@@ -65,7 +71,7 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         Directory.CreateDirectory(directory);
         ColonyLevelData data = ColonyLevelData.FromCells(
-            _topCells, _topHidden, _topKeys, _topX, _topY,
+            _topCells, _topHidden, _topKeys, _topDoors, _topCookies, _topX, _topY,
             _botCells, _botCapacity, _botHidden, _botLock, _botLink, _botX, _botY);
         File.WriteAllText(path, ColonyLevelIO.ToJson(data));
 
@@ -97,6 +103,9 @@ public class ColonyLevelPainter : OdinEditorWindow
         _topCells = data.TopToCells();
         _topHidden = data.TopHiddenFlags();
         _topKeys = data.TopKeysToCells();
+        _topDoors = data.TopDoorRegions();
+        _topCookies = data.TopCookieRegions();
+        PruneRegions();
 
         _botX = Mathf.Clamp(data.bottom.gridX, 1, MaxGrid);
         _botY = Mathf.Clamp(data.bottom.gridY, 1, MaxGrid);
@@ -114,11 +123,18 @@ public class ColonyLevelPainter : OdinEditorWindow
     [SerializeField, HideInInspector] int _guideStep = 4;
     [SerializeField, HideInInspector] bool _showIndex;
 
+    [SerializeField, HideInInspector] int _doorCapacity = 30;
+    [SerializeField, HideInInspector] int _cookieCapacity = 30;
+    [SerializeField, HideInInspector] bool _showDoors = true;
+    [SerializeField, HideInInspector] bool _showCookies = true;
+
     [SerializeField, HideInInspector] int _topX = 24;
     [SerializeField, HideInInspector] int _topY = 24;
     [SerializeField, HideInInspector] string[] _topCells;
     [SerializeField, HideInInspector] bool[] _topHidden;
     [SerializeField, HideInInspector] string[] _topKeys;
+    [SerializeField, HideInInspector] List<ColonyRegion> _topDoors = new List<ColonyRegion>();
+    [SerializeField, HideInInspector] List<ColonyRegion> _topCookies = new List<ColonyRegion>();
 
     [SerializeField, HideInInspector] int _botX = 4;
     [SerializeField, HideInInspector] int _botY = 2;
@@ -131,6 +147,11 @@ public class ColonyLevelPainter : OdinEditorWindow
     Rect[] _topRects;
     Rect[] _botRects;
     GUIStyle _cellLabel;
+
+    int _dragStart = -1;
+    int _dragEnd = -1;
+    bool _dragging;
+    int _pendingStart = -1;
 
     GUIStyle CellLabel
     {
@@ -220,23 +241,63 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         DrawModeButton(ColonyPaintMode.Color, "COLOR");
         DrawModeButton(ColonyPaintMode.Hidden, "HIDDEN");
+
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+    }
+
+    void DrawKeyGroup()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
         DrawModeButton(ColonyPaintMode.Key, "KEY");
+        DrawBrushPicker();
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+    }
+
+    void DrawDoorGroup()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+        DrawModeButton(ColonyPaintMode.HungryDoor, "DOOR");
+        DrawBrushPicker();
+        _doorCapacity = DrawCapacityField(_doorCapacity);
+        _showDoors = EditorGUILayout.ToggleLeft("Show", _showDoors, GUILayout.Width(52f));
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+    }
+
+    void DrawCookieGroup()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
+        DrawModeButton(ColonyPaintMode.Cookie, "COOKIE");
+        _cookieCapacity = DrawCapacityField(_cookieCapacity);
+        _showCookies = EditorGUILayout.ToggleLeft("Show", _showCookies, GUILayout.Width(52f));
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+    }
+
+    void DrawLockGroup()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
         DrawModeButton(ColonyPaintMode.Lock, "LOCK");
+        DrawBrushPicker();
+        GUILayout.FlexibleSpace();
+        EditorGUILayout.EndHorizontal();
+    }
+
+    void DrawLinkGroup()
+    {
+        EditorGUILayout.BeginHorizontal(EditorStyles.helpBox);
         DrawModeButton(ColonyPaintMode.Link, "LINK");
 
-        GUILayout.Space(12f);
-
-        EditorGUIUtility.labelWidth = 46f;
-        using (new EditorGUI.DisabledScope(_mode != ColonyPaintMode.Link))
-            _linkId = Mathf.Clamp(EditorGUILayout.IntField("Link #", _linkId, GUILayout.Width(96f)), 1, MaxLinkId);
+        EditorGUIUtility.labelWidth = 14f;
+        _linkId = Mathf.Clamp(EditorGUILayout.IntField("#", _linkId, GUILayout.Width(48f)), 1, MaxLinkId);
         EditorGUIUtility.labelWidth = 0f;
 
-        Rect swatch = GUILayoutUtility.GetRect(26f, 18f, GUILayout.Width(26f), GUILayout.Height(18f));
-        EditorGUI.DrawRect(swatch, BorderColor);
-        EditorGUI.DrawRect(new Rect(swatch.x + 1f, swatch.y + 1f, swatch.width - 2f, swatch.height - 2f), LinkColor(_linkId));
+        DrawSwatch(LinkColor(_linkId));
 
-        GUILayout.Space(10f);
-        if (GUILayout.Button("Clear links", EditorStyles.miniButton, GUILayout.Width(90f)))
+        GUILayout.Space(6f);
+        if (GUILayout.Button("Clear", EditorStyles.miniButton, GUILayout.Width(52f)))
         {
             System.Array.Clear(_botLink, 0, _botLink.Length);
             Repaint();
@@ -246,14 +307,53 @@ public class ColonyLevelPainter : OdinEditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
+    void DrawBrushPicker()
+    {
+        int next = EditorGUILayout.Popup(_brush, ColonyPalette.Names, GUILayout.Width(72f));
+        if (next != _brush)
+        {
+            _brush = next;
+            Repaint();
+        }
+
+        DrawSwatch(ColonyPalette.ToColor(ColonyPalette.HexAt(_brush)));
+    }
+
+    static void DrawSwatch(Color color)
+    {
+        Rect rect = GUILayoutUtility.GetRect(22f, 18f, GUILayout.Width(22f), GUILayout.Height(18f));
+        EditorGUI.DrawRect(rect, BorderColor);
+        EditorGUI.DrawRect(new Rect(rect.x + 1f, rect.y + 1f, rect.width - 2f, rect.height - 2f), color);
+    }
+
+    static int DrawCapacityField(int value)
+    {
+        EditorGUIUtility.labelWidth = 30f;
+        int next = Mathf.Max(0, EditorGUILayout.IntField("Cap", value, GUILayout.Width(70f)));
+        EditorGUIUtility.labelWidth = 0f;
+        return next;
+    }
+
+    static bool IsRegionMode(ColonyPaintMode mode) =>
+        mode == ColonyPaintMode.HungryDoor || mode == ColonyPaintMode.Cookie;
+
+    static bool OwnsMode(ColonyPaintMode mode, bool bottom) => mode switch
+    {
+        ColonyPaintMode.Color or ColonyPaintMode.Hidden => true,
+        ColonyPaintMode.Key or ColonyPaintMode.HungryDoor or ColonyPaintMode.Cookie => !bottom,
+        _ => bottom,
+    };
+
     void DrawModeButton(ColonyPaintMode mode, string label)
     {
         Color previous = GUI.backgroundColor;
         if (_mode == mode) GUI.backgroundColor = ModeOnColor;
 
-        if (GUILayout.Button(label, EditorStyles.miniButton, GUILayout.Width(76f), GUILayout.Height(20f)))
+        if (GUILayout.Button(label, EditorStyles.miniButton, GUILayout.Width(66f), GUILayout.Height(20f)))
         {
             _mode = mode;
+            _dragging = false;
+            _pendingStart = -1;
             Repaint();
         }
 
@@ -266,12 +366,14 @@ public class ColonyLevelPainter : OdinEditorWindow
         ColonyPaintMode.Key => $"KEY  •  Chuột trái: đặt key màu {ColonyPalette.NameAt(_brush)} lên ô Grid Top    •    Chuột phải: bỏ key",
         ColonyPaintMode.Lock => $"LOCK  •  Chuột trái: khoá ô Grid Bottom bằng màu {ColonyPalette.NameAt(_brush)} (hiện chữ Lock)    •    Chuột phải: mở",
         ColonyPaintMode.Link => $"LINK #{_linkId}  •  Chuột trái: nối ô vào nhóm {_linkId}    •    Chuột phải: bỏ khỏi nhóm",
+        ColonyPaintMode.HungryDoor => $"DOOR {ColonyPalette.NameAt(_brush)} cap {_doorCapacity}  •  Kéo để quét vùng, hoặc click ô đầu rồi click ô cuối    •    Chuột phải: xoá vùng    •    Chỉ Grid Top",
+        ColonyPaintMode.Cookie => $"COOKIE cap {_cookieCapacity}  •  Chuột trái: đặt khối {CookieSize}x{CookieSize} tính từ ô bấm (phải + dưới + dưới phải)    •    Chuột phải: xoá vùng    •    Chỉ Grid Top",
         _ => "COLOR  •  Chuột trái: tô màu    •    Chuột phải: xoá ô    •    Giữ và kéo để tô liên tục",
     };
 
     void DrawTopPanel()
     {
-        float width = Mathf.Max(280f, _topX * _cellSize + 26f);
+        float width = Mathf.Max(360f, _topX * _cellSize + 26f);
         EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(width));
         EditorGUILayout.LabelField("GRID TOP", EditorStyles.boldLabel);
 
@@ -287,14 +389,85 @@ public class ColonyLevelPainter : OdinEditorWindow
             _topKeys = Resize(_topKeys, _topX, _topY, nextX, nextY);
             _topX = nextX;
             _topY = nextY;
+            PruneRegions();
         }
+
+        DrawKeyGroup();
+        DrawDoorGroup();
+        DrawCookieGroup();
 
         EditorGUILayout.Space(4f);
         DrawGrid(_topX, _topY, _topCells, null, _cellSize, false);
+        HandleDoorMouseUp(Event.current);
         DrawGuides(_topX, _topY, _topRects);
+        DrawRegions();
         EditorGUILayout.Space(2f);
         EditorGUILayout.LabelField($"Đã tô {PaintedCount(_topCells)} / {_topCells.Length} ô    •    Hidden {CountFlags(_topHidden)}    •    Key {PaintedCount(_topKeys)}", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Door {_topDoors.Count} vùng    •    Cookie {_topCookies.Count} vùng", EditorStyles.miniLabel);
         EditorGUILayout.EndVertical();
+    }
+
+    void DrawRegions()
+    {
+        if (Event.current.type != EventType.Repaint || _topRects == null || _topRects.Length != _topX * _topY) return;
+
+        float thickness = Mathf.Max(3f, _cellSize * 0.2f);
+
+        if (_showDoors)
+            foreach (ColonyRegion region in _topDoors)
+                DrawRegion(RegionRect(region), ColonyPalette.ToColor(region.color), region.capacity, thickness);
+
+        if (_showCookies)
+            foreach (ColonyRegion region in _topCookies)
+                DrawRegion(RegionRect(region), CookieColor, region.capacity, thickness);
+
+        if (_mode != ColonyPaintMode.HungryDoor) return;
+
+        if (_dragging)
+        {
+            Color preview = ColonyPalette.ToColor(ColonyPalette.HexAt(_brush));
+            DrawRegion(CornerRect(_dragStart, _dragEnd), preview, _doorCapacity, thickness);
+        }
+        else if (_pendingStart >= 0)
+        {
+            Rect pending = CornerRect(_pendingStart, _pendingStart);
+            if (pending.width > 0f) DrawFrame(pending, CenterGuideColor, thickness);
+        }
+    }
+
+    void DrawRegion(Rect rect, Color color, int capacity, float thickness)
+    {
+        if (rect.width <= 0f || rect.height <= 0f) return;
+
+        EditorGUI.DrawRect(rect, new Color(color.r, color.g, color.b, RegionFillAlpha));
+        DrawFrame(rect, color, thickness);
+
+        if (_cellSize < 12f) return;
+
+        CellLabel.fontSize = Mathf.Clamp(Mathf.RoundToInt(_cellSize * 0.62f), 9, 22);
+        CellLabel.normal.textColor = Luminance(color) > 0.55f ? Color.black : Color.white;
+        GUI.Label(rect, capacity.ToString(), CellLabel);
+    }
+
+    Rect RegionRect(ColonyRegion region) =>
+        region == null ? Rect.zero : CellsRect(region.x0, region.y0, region.x1, region.y1);
+
+    Rect CornerRect(int startIndex, int endIndex)
+    {
+        ColonyRegion region = ColonyRegion.FromCorners(
+            ColonyGridIndex.X(startIndex, _topX), ColonyGridIndex.Y(startIndex, _topX),
+            ColonyGridIndex.X(endIndex, _topX), ColonyGridIndex.Y(endIndex, _topX));
+
+        return RegionRect(region);
+    }
+
+    Rect CellsRect(int x0, int y0, int x1, int y1)
+    {
+        if (x0 < 0 || y0 < 0 || x1 >= _topX || y1 >= _topY) return Rect.zero;
+
+        Rect first = _topRects[ColonyGridIndex.From(x0, y0, _topX)];
+        Rect last = _topRects[ColonyGridIndex.From(x1, y1, _topX)];
+        return Rect.MinMaxRect(first.xMin, first.yMin, last.xMax, last.yMax);
     }
 
     void DrawBottomPanel()
@@ -318,6 +491,9 @@ public class ColonyLevelPainter : OdinEditorWindow
             _botX = nextX;
             _botY = nextY;
         }
+
+        DrawLockGroup();
+        DrawLinkGroup();
 
         EditorGUILayout.BeginHorizontal();
         EditorGUIUtility.labelWidth = 62f;
@@ -581,8 +757,15 @@ public class ColonyLevelPainter : OdinEditorWindow
         if (current.type != EventType.MouseDown && current.type != EventType.MouseDrag) return;
         if (!rect.Contains(current.mousePosition)) return;
         if (current.button != 0 && current.button != 1) return;
+        if (!OwnsMode(_mode, bottom)) return;
 
         bool paint = current.button == 0;
+
+        if (IsRegionMode(_mode))
+        {
+            HandleRegionInput(index, current);
+            return;
+        }
 
         if (!bottom)
         {
@@ -615,7 +798,6 @@ public class ColonyLevelPainter : OdinEditorWindow
                 case ColonyPaintMode.Hidden: _botHidden[index] = paint; break;
                 case ColonyPaintMode.Lock: _botLock[index] = paint ? ColonyPalette.HexAt(_brush) : null; break;
                 case ColonyPaintMode.Link: _botLink[index] = paint ? _linkId : 0; break;
-                case ColonyPaintMode.Key: break;
                 default:
                     if (paint)
                     {
@@ -634,6 +816,108 @@ public class ColonyLevelPainter : OdinEditorWindow
 
         current.Use();
         Repaint();
+    }
+
+    void HandleRegionInput(int index, Event current)
+    {
+        List<ColonyRegion> regions = _mode == ColonyPaintMode.HungryDoor ? _topDoors : _topCookies;
+
+        if (current.button == 1)
+        {
+            if (current.type != EventType.MouseDown) return;
+
+            RemoveRegionAt(regions, index);
+            _dragging = false;
+            _pendingStart = -1;
+        }
+        else if (_mode == ColonyPaintMode.Cookie)
+        {
+            if (current.type != EventType.MouseDown) return;
+
+            AddCookie(index);
+        }
+        else if (current.type == EventType.MouseDown)
+        {
+            _dragStart = index;
+            _dragEnd = index;
+            _dragging = true;
+        }
+        else if (current.type == EventType.MouseDrag && _dragging)
+        {
+            _dragEnd = index;
+        }
+        else return;
+
+        current.Use();
+        Repaint();
+    }
+
+    void HandleDoorMouseUp(Event current)
+    {
+        if (!_dragging || current.type != EventType.MouseUp || current.button != 0) return;
+
+        _dragging = false;
+
+        if (_dragStart != _dragEnd)
+        {
+            AddDoor(_dragStart, _dragEnd);
+            _pendingStart = -1;
+        }
+        else if (_pendingStart >= 0)
+        {
+            AddDoor(_pendingStart, _dragStart);
+            _pendingStart = -1;
+        }
+        else
+        {
+            _pendingStart = _dragStart;
+        }
+
+        current.Use();
+        Repaint();
+    }
+
+    void AddDoor(int startIndex, int endIndex)
+    {
+        ColonyRegion region = ColonyRegion.FromCorners(
+            ColonyGridIndex.X(startIndex, _topX), ColonyGridIndex.Y(startIndex, _topX),
+            ColonyGridIndex.X(endIndex, _topX), ColonyGridIndex.Y(endIndex, _topX));
+
+        region.color = ColonyPalette.HexAt(_brush);
+        region.capacity = _doorCapacity;
+
+        _topDoors.RemoveAll(other => other.Overlaps(region));
+        _topDoors.Add(region);
+    }
+
+    void AddCookie(int index)
+    {
+        if (_topX < CookieSize || _topY < CookieSize) return;
+
+        int x = Mathf.Min(ColonyGridIndex.X(index, _topX), _topX - CookieSize);
+        int y = Mathf.Min(ColonyGridIndex.Y(index, _topX), _topY - CookieSize);
+
+        ColonyRegion region = ColonyRegion.FromCorners(x, y, x + CookieSize - 1, y + CookieSize - 1);
+        region.capacity = _cookieCapacity;
+
+        _topCookies.RemoveAll(other => other.Overlaps(region));
+        _topCookies.Add(region);
+    }
+
+    void RemoveRegionAt(List<ColonyRegion> regions, int index)
+    {
+        int x = ColonyGridIndex.X(index, _topX);
+        int y = ColonyGridIndex.Y(index, _topX);
+        regions.RemoveAll(region => region.Contains(x, y));
+    }
+
+    void PruneRegions()
+    {
+        _topDoors.RemoveAll(region => region == null || region.x1 >= _topX || region.y1 >= _topY);
+        _topCookies.RemoveAll(region => region == null || region.x1 >= _topX || region.y1 >= _topY);
+
+        _dragging = false;
+        _pendingStart = -1;
     }
 
     void ClearMarks(int index)
@@ -751,6 +1035,8 @@ public class ColonyLevelPainter : OdinEditorWindow
             _topHidden = Resize(_topHidden, _topX, _topY, _topX, _topY);
         if (_topKeys == null || _topKeys.Length != _topX * _topY)
             _topKeys = Resize(_topKeys, _topX, _topY, _topX, _topY);
+        _topDoors ??= new List<ColonyRegion>();
+        _topCookies ??= new List<ColonyRegion>();
         if (_botCells == null || _botCells.Length != _botX * _botY)
             _botCells = Resize(_botCells, _botX, _botY, _botX, _botY);
         if (_botCapacity == null || _botCapacity.Length != _botX * _botY)

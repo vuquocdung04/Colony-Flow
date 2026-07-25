@@ -29,7 +29,9 @@ public class Ant : MonoBehaviour
     GridTarget _target;
 
     readonly List<Vector3> _path = new List<Vector3>();
+    readonly List<Vector3> _returnPath = new List<Vector3>();
     int _waypoint;
+    int _mouthIndex;
     float _holdTimer;
 
     Vector3 _baseEuler;
@@ -70,7 +72,7 @@ public class Ant : MonoBehaviour
 
         _path.Clear();
         _waypoint = 0;
-        _grid.BuildApproachPath(transform.position, _target, _path);
+        _mouthIndex = _grid.BuildApproachPath(transform.position, _target, _path);
         SetState(AntState.FindFood);
     }
 
@@ -102,9 +104,14 @@ public class Ant : MonoBehaviour
 
     void OnHoldFinished()
     {
+        _returnPath.Clear();
+        _grid.BuildReturnPath(_path, _mouthIndex, _grid.HolePosition, _returnPath);
+
         _path.Clear();
+        _path.AddRange(_returnPath);
+        _returnPath.Clear();
         _waypoint = 0;
-        _grid.BuildExitPath(_target, _grid.HolePosition, _path);
+
         SetState(AntState.FindHole);
     }
 
