@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
@@ -14,6 +15,7 @@ public class AnthillVisual : MonoBehaviour
 
     public AnthillHidden hidden;
     public AnthillLock lockView;
+    public LinkedLine linkView;
 
     public float moveDuration = 0.3f;
     public Ease moveEase = Ease.OutQuad;
@@ -23,6 +25,8 @@ public class AnthillVisual : MonoBehaviour
     Tween _move;
 
     public Transform Root => visual != null ? visual : transform;
+
+    public bool IsHiddenActive => hidden != null && hidden.IsActive;
 
     public Vector3 WaitLocalPosition => LocalPoint(waitPoint);
 
@@ -48,6 +52,7 @@ public class AnthillVisual : MonoBehaviour
 
         if (hidden != null) hidden.Init(owner, this);
         if (lockView != null) lockView.Init(owner, this);
+        if (linkView != null) linkView.Init(owner);
     }
 
     public Vector3 StateLocalPosition(AnthillState state) =>
@@ -57,15 +62,24 @@ public class AnthillVisual : MonoBehaviour
     {
         _move?.Kill();
 
+        if (linkView != null) linkView.ApplyState(state == AnthillState.Sleep || IsHiddenActive);
+
         if (instant)
         {
             Root.localPosition = StateLocalPosition(state);
+            RefreshLinks();
             return;
         }
 
         _move = Root.DOLocalMove(StateLocalPosition(state), moveDuration)
                     .SetEase(moveEase)
-                    .SetLink(gameObject);
+                    .SetLink(gameObject)
+                    .OnUpdate(RefreshLinks);
+    }
+
+    public void RefreshLinks()
+    {
+        if (linkView != null) linkView.RefreshAllLinks();
     }
 
     public void SetContentActive(bool value)
@@ -85,7 +99,7 @@ public class AnthillVisual : MonoBehaviour
 
     public void OnReachRow0()
     {
-        if (hidden != null) hidden.TryUnlock(true);
+        if (hidden != null && hidden.TryUnlock(true) && linkView != null) linkView.RefreshAllLooks();
         if (lockView != null) lockView.TryUnlock(false);
     }
 

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
@@ -35,6 +36,14 @@ public class Anthill : MonoBehaviour
     bool _spawning;
     float _timer;
 
+    public int Index { get; private set; }
+
+    public LinkedLine Link => visual != null ? visual.linkView : null;
+
+    public bool IsHiddenNow => visual != null && visual.IsHiddenActive;
+
+    public bool IsLowered => State == AnthillState.Sleep || IsHiddenNow;
+
     public Vector3 Size => visual != null ? visual.Size : Vector3.one;
 
     void Awake()
@@ -42,7 +51,13 @@ public class Anthill : MonoBehaviour
         if (visual != null) visual.Init(this);
     }
 
-    public void Bind(GridBottom board) => _board = board;
+    public void Bind(GridBottom board, int index)
+    {
+        _board = board;
+        Index = index;
+    }
+
+    public void SetIndex(int index) => Index = index;
 
     public void Setup(string hex, int capacity, GridTop grid, WaitAreas areas)
     {
@@ -101,19 +116,82 @@ public class Anthill : MonoBehaviour
                          .SetEase(moveEase)
                          .SetLink(gameObject);
 
+        if (visual != null) _move.OnUpdate(visual.RefreshLinks);
         if (onComplete != null) _move.OnComplete(onComplete);
+    }
+
+    public void Connect(Anthill partner, bool owner)
+    {
+        if (Link != null && partner != null) Link.Setup(partner, owner);
     }
 
     public bool TrySelect()
     {
-        if (IsTaken || State != AnthillState.Wait || _waitAreas == null) return false;
+        if (IsTaken || _waitAreas == null) return false;
+
+        LinkGroup group = Link != null ? Link.group : null;
+        if (group != null && group.Count > 1) return TrySelectGroup(group);
+
+        if (State != AnthillState.Wait) return false;
         if (!_waitAreas.TryPlace(this, out Vector3 slotPosition)) return false;
 
         IsTaken = true;
         if (_board != null) _board.Release(this);
 
-        MoveTo(slotPosition, false, () => _spawning = true);
+        MoveTo(slotPosition, false, BeginSpawn);
         return true;
+    }
+
+    bool TrySelectGroup(LinkGroup group)
+    {
+        int gridX = _board != null ? _board.gridX : 1;
+        if (!group.CanClick(this, gridX)) return false;
+        if (_waitAreas.FreeSlots < group.Count) return false;
+
+        List<Anthill> ordered = new List<Anthill>(group.members);
+        ordered.Sort((a, b) =>
+        {
+            int ax = ColonyGridIndex.X(a.Index, gridX);
+            int bx = ColonyGridIndex.X(b.Index, gridX);
+            return ax != bx ? ax.CompareTo(bx) : a.Index.CompareTo(b.Index);
+        });
+
+        foreach (Anthill m in ordered)
+        {
+            if (m == null || m.IsTaken) continue;
+            if (!_waitAreas.TryPlace(m, out Vector3 pos)) continue;
+
+            m.IsTaken = true;
+            m.MoveTo(pos, false, m.BeginSpawn);
+        }
+
+        if (_board != null) _board.ReleaseGroup(group.members);
+        return true;
+    }
+
+    void BeginSpawn() => _spawning = true;
+
+    public bool CanDestroy()
+    {
+        if (Capacity > 0) return false;
+
+        LinkGroup group = Link != null ? Link.group : null;
+        return group == null || group.AllEmpty();
+    }
+
+    void TryDestroy()
+    {
+        if (!CanDestroy()) return;
+
+        LinkGroup group = Link != null ? Link.group : null;
+        if (group == null)
+        {
+            OnEmpty();
+            return;
+        }
+
+        foreach (Anthill member in group.members)
+            if (member != null) member.OnEmpty();
     }
 
     public void OnEmpty()
@@ -143,7 +221,7 @@ public class Anthill : MonoBehaviour
         if (Capacity > 0) return;
 
         _spawning = false;
-        OnEmpty();
+        TryDestroy();
     }
 
     void RefreshLabel()

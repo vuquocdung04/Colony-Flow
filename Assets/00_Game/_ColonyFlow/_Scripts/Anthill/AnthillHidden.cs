@@ -4,11 +4,12 @@ public class AnthillHidden : MonoBehaviour
 {
     public Transform hidden;
     public ParticleSystem hiddenReveal;
-    public Transform linkedPoint;
 
     Anthill _anthill;
     AnthillVisual _visual;
     bool _active;
+
+    public bool IsActive => _active;
 
     public void Init(Anthill owner, AnthillVisual visual)
     {
@@ -23,13 +24,14 @@ public class AnthillHidden : MonoBehaviour
         if (_visual != null) _visual.SetContentActive(!value);
     }
 
-    public void TryUnlock(bool condition)
+    public bool TryUnlock(bool condition)
     {
-        if (!_active || !condition) return;
+        if (!_active || !condition) return false;
 
         _active = false;
         if (hiddenReveal != null) hiddenReveal.Play();
         if (hidden != null) hidden.gameObject.SetActive(false);
         if (_visual != null) _visual.SetContentActive(true);
+        return true;
     }
 }

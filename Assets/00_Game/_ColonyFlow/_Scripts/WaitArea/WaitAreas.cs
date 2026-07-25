@@ -23,6 +23,19 @@ public class WaitAreas : MonoBehaviour
 
     private Anthill[] _occupants;
 
+    public int FreeSlots
+    {
+        get
+        {
+            EnsureOccupants(slots.Count);
+
+            int free = 0;
+            for (int i = 0; i < slots.Count; i++)
+                if (slots[i] != null && _occupants[i] == null) free++;
+            return free;
+        }
+    }
+
     public bool TryPlace(Anthill anthill, out Vector3 slotPosition)
     {
         slotPosition = Vector3.zero;
