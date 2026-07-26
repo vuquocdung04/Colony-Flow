@@ -7,24 +7,27 @@ public enum AntState
     FindFood,
     Hold,
     FindHole,
+    EnterHole,
 }
 
 public class Ant : MonoBehaviour
 {
     public List<MeshRenderer> meshRenderers = new List<MeshRenderer>();
     public Transform foodHolder;
+    public AntAnimation anim;
 
     public float moveSpeed = 3f;
     public float turnSpeed = 540f;
     public float arriveDistance = 0.05f;
     public float holdDuration = 0.4f;
+    public float spread = 0.12f;
+    public float holeEnterDistance = 0.5f;
 
     public event Action<Ant, AntState> StateChanged;
 
     public AntState State { get; private set; } = AntState.FindFood;
     public string ColorHex { get; private set; }
 
-    MaterialPropertyBlock _block;
     GridTop _grid;
     GridTarget _target;
 
@@ -33,6 +36,11 @@ public class Ant : MonoBehaviour
     int _waypoint;
     int _mouthIndex;
     float _holdTimer;
+
+    float _spreadOffset;
+    int _spreadFrom;
+    int _spreadTo;
+    Vector3 _pathStart;
 
     Vector3 _baseEuler;
     float _yaw;
@@ -50,9 +58,8 @@ public class Ant : MonoBehaviour
         ColorHex = hex;
         Color color = ColonyPalette.ToColor(hex);
 
-        _block ??= new MaterialPropertyBlock();
         foreach (MeshRenderer target in meshRenderers)
-            ColonyPalette.Tint(target, _block, color);
+            ColonyPalette.Tint(target, color);
     }
 
     public void Init(GridTop grid, GridTarget target)
@@ -72,7 +79,10 @@ public class Ant : MonoBehaviour
 
         _path.Clear();
         _waypoint = 0;
+        _pathStart = transform.position;
+        _spreadOffset = UnityEngine.Random.Range(-spread, spread);
         _mouthIndex = _grid.BuildApproachPath(transform.position, _target, _path);
+        SetSpreadRange(0, _mouthIndex);
         SetState(AntState.FindFood);
     }
 
@@ -90,9 +100,33 @@ public class Ant : MonoBehaviour
                 break;
 
             case AntState.FindHole:
-                if (FollowPath()) Destroy(gameObject);
+                if (NearHole() || FollowPath()) EnterHole();
                 break;
         }
+    }
+
+    bool NearHole()
+    {
+        if (holeEnterDistance <= 0f || _waypoint < _path.Count - 1) return false;
+
+        Vector3 hole = _grid.HolePosition;
+        Vector3 position = transform.position;
+        float dx = hole.x - position.x;
+        float dz = hole.z - position.z;
+        return dx * dx + dz * dz <= holeEnterDistance * holeEnterDistance;
+    }
+
+    void EnterHole()
+    {
+        SetState(AntState.EnterHole);
+
+        if (anim == null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        anim.PlayEnterHole(_grid.HolePosition, () => Destroy(gameObject));
     }
 
     void OnReachFood()
@@ -107,11 +141,15 @@ public class Ant : MonoBehaviour
         _returnPath.Clear();
         _grid.BuildReturnPath(_path, _mouthIndex, _grid.HolePosition, _returnPath);
 
+        int corridorCount = _path.Count - 1 - _mouthIndex;
+
         _path.Clear();
         _path.AddRange(_returnPath);
         _returnPath.Clear();
         _waypoint = 0;
+        _pathStart = transform.position;
 
+        SetSpreadRange(corridorCount, _path.Count - 1);
         SetState(AntState.FindHole);
     }
 
@@ -125,8 +163,27 @@ public class Ant : MonoBehaviour
     {
         if (_waypoint >= _path.Count) return true;
 
-        if (MoveTowards(_path[_waypoint])) _waypoint++;
+        if (MoveTowards(Waypoint(_waypoint))) _waypoint++;
         return _waypoint >= _path.Count;
+    }
+
+    void SetSpreadRange(int from, int to)
+    {
+        _spreadFrom = Mathf.Max(0, from);
+        _spreadTo = Mathf.Min(to, _path.Count);
+    }
+
+    Vector3 Waypoint(int index)
+    {
+        Vector3 point = _path[index];
+        if (index < _spreadFrom || index >= _spreadTo) return point;
+
+        Vector3 previous = index > 0 ? _path[index - 1] : _pathStart;
+        Vector3 direction = new Vector3(point.x - previous.x, 0f, point.z - previous.z);
+        if (direction.sqrMagnitude <= 0.0001f) return point;
+
+        direction.Normalize();
+        return point + new Vector3(direction.z, 0f, -direction.x) * _spreadOffset;
     }
 
     bool MoveTowards(Vector3 target)
@@ -155,9 +212,10 @@ public class Ant : MonoBehaviour
         Vector3 previous = transform.position;
         for (int i = _waypoint; i < _path.Count; i++)
         {
-            Gizmos.DrawLine(previous, _path[i]);
-            Gizmos.DrawWireSphere(_path[i], 0.1f);
-            previous = _path[i];
+            Vector3 point = Waypoint(i);
+            Gizmos.DrawLine(previous, point);
+            Gizmos.DrawWireSphere(point, 0.1f);
+            previous = point;
         }
     }
 }

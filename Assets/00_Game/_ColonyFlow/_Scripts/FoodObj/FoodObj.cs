@@ -3,14 +3,13 @@ using UnityEngine;
 
 public class FoodObj : MonoBehaviour
 {
-    public float carryRotationZ = -140f;
-
-    static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-
+    [Header("Refs")]
     public MeshRenderer meshRenderer;
     public Material hiddenMaterial;
 
-    MaterialPropertyBlock _block;
+    [Space, Header("Carry - kiến cắp đi")]
+    public float carryRotationZ = -140f;
+
     Material _realMaterial;
     Color _color = Color.white;
     bool _hasColor;
@@ -64,25 +63,9 @@ public class FoodObj : MonoBehaviour
 
     public void Reveal() => SetHidden(false);
 
-    void ApplyColor()
-    {
-        if (meshRenderer == null) return;
+    void ApplyColor() => ColonyPalette.Tint(meshRenderer, _color);
 
-        _block ??= new MaterialPropertyBlock();
-        meshRenderer.GetPropertyBlock(_block);
-        _block.SetColor(BaseColorId, _color);
-        meshRenderer.SetPropertyBlock(_block);
-    }
-
-    void ClearBlock()
-    {
-        if (meshRenderer == null) return;
-
-        _block ??= new MaterialPropertyBlock();
-        meshRenderer.GetPropertyBlock(_block);
-        _block.Clear();
-        meshRenderer.SetPropertyBlock(_block);
-    }
+    void ClearBlock() => ColonyPalette.ClearTint(meshRenderer);
 
     public void Collect(Ant ant)
     {

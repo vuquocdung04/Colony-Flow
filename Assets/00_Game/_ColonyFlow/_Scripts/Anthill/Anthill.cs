@@ -10,12 +10,15 @@ public enum AnthillState
 
 public class Anthill : MonoBehaviour
 {
+    [Header("Refs")]
     public AnthillVisual visual;
 
+    [Space, Header("Spawn")]
     public Ant antPrefab;
     public Transform spawnPoint;
-
     public float spawnInterval = 0.35f;
+
+    [Space, Header("Move")]
     public float moveDuration = 0.3f;
     public Ease moveEase = Ease.OutQuad;
 
@@ -36,6 +39,7 @@ public class Anthill : MonoBehaviour
     AntSpawner _spawner;
     Tween _move;
     bool _keyRequested;
+    bool _emptyStarted;
 
     public Transform LockTarget => visual != null ? visual.LockTarget : transform;
 
@@ -156,13 +160,14 @@ public class Anthill : MonoBehaviour
 
     public bool TrySelect()
     {
-        if (IsTaken || IsLocked || _waitAreas == null) return false;
+        if (IsTaken || _waitAreas == null) return false;
+        if (IsLocked) return Reject();
 
         LinkGroup group = Link != null ? Link.group : null;
         if (group != null && group.Count > 1) return TrySelectGroup(group);
 
-        if (State != AnthillState.Wait) return false;
-        if (!_waitAreas.TryPlace(this, out Vector3 slotPosition)) return false;
+        if (State != AnthillState.Wait) return Reject();
+        if (!_waitAreas.TryPlace(this, out Vector3 slotPosition)) return Reject();
 
         IsTaken = true;
         if (_board != null) _board.Release(this);
@@ -174,8 +179,8 @@ public class Anthill : MonoBehaviour
     bool TrySelectGroup(LinkGroup group)
     {
         int gridX = _board != null ? _board.gridX : 1;
-        if (!group.CanClick(this, gridX)) return false;
-        if (_waitAreas.FreeSlots < group.Count) return false;
+        if (!group.CanClick(this, gridX)) return Reject();
+        if (_waitAreas.FreeSlots < group.Count) return Reject();
 
         List<Anthill> ordered = new List<Anthill>(group.members);
         ordered.Sort((a, b) =>
@@ -198,6 +203,17 @@ public class Anthill : MonoBehaviour
         return true;
     }
 
+    bool Reject()
+    {
+        PlayWobble();
+        return false;
+    }
+
+    public void PlayWobble()
+    {
+        if (visual != null) visual.PlayWobble();
+    }
+
     void BeginSpawn() => _spawner?.Begin();
 
     public bool CanDestroy()
@@ -215,18 +231,53 @@ public class Anthill : MonoBehaviour
         LinkGroup group = Link != null ? Link.group : null;
         if (group == null)
         {
-            OnEmpty();
+            PlayEmpty();
             return;
         }
 
-        foreach (Anthill member in group.members)
-            if (member != null) member.OnEmpty();
+        PlayGroupEmpty(group);
     }
 
-    public void OnEmpty()
+    public void PlayEmpty()
+    {
+        if (!BeginEmpty()) return;
+
+        if (visual != null) visual.PlayEmpty(Remove);
+        else Remove();
+    }
+
+    void PlayGroupEmpty(LinkGroup group)
+    {
+        List<Anthill> members = group.members;
+
+        foreach (Anthill member in members)
+            if (member != null) member.BeginEmpty();
+
+        if (visual != null) visual.PlayGroupEmpty(members, () => RemoveAll(members));
+        else RemoveAll(members);
+    }
+
+    bool BeginEmpty()
+    {
+        if (_emptyStarted) return false;
+
+        _emptyStarted = true;
+        _move?.Kill();
+        ReleaseSlot();
+        return true;
+    }
+
+    static void RemoveAll(List<Anthill> members)
+    {
+        foreach (Anthill member in members)
+            if (member != null) member.Remove();
+    }
+
+    void Remove() => Destroy(gameObject);
+
+    void ReleaseSlot()
     {
         if (_waitAreas != null) _waitAreas.Release(this);
-        Destroy(gameObject);
     }
 
     public void Tick(float delta) => _spawner?.Tick(delta);

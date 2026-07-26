@@ -30,9 +30,6 @@ public class LinkedLine : MonoBehaviour
     public bool IsOwner => ownedPartner != null;
     public bool IsInGroup => group != null;
 
-    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-    private MaterialPropertyBlock _mpb;
-
     private Anthill _owner;
 
     private Color OwnerColor => ColonyPalette.ToColor(_owner.ColorHex);
@@ -129,10 +126,7 @@ public class LinkedLine : MonoBehaviour
 
         if (hidden) return;
 
-        _mpb ??= new MaterialPropertyBlock();
-        renderer.GetPropertyBlock(_mpb, slot);
-        _mpb.SetColor(BaseColorId, color);
-        renderer.SetPropertyBlock(_mpb, slot);
+        ColonyPalette.Tint(renderer, color, slot);
     }
 
     public void RefreshLink()

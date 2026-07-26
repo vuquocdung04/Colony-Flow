@@ -940,6 +940,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2774016548632367757}
   - component: {fileID: 2071821660243660270}
+  - component: {fileID: 3846113216498218602}
   m_Layer: 0
   m_Name: Ant
   m_TagString: Untagged
@@ -979,10 +980,37 @@ MonoBehaviour:
   - {fileID: 275005151771665907}
   - {fileID: 994927509852434115}
   foodHolder: {fileID: 2251052844015923597}
+  anim: {fileID: 3846113216498218602}
   moveSpeed: 3
   turnSpeed: 540
   arriveDistance: 0.05
   holdDuration: 0.4
+  spread: 0.4
+  holeEnterDistance: 1.3
+--- !u!114 &3846113216498218602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7381276169620192280}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3b38c32823ddde44b7d585ba4b19983, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AntAnimation
+  legsLeft:
+  - {fileID: 6851827655101271519}
+  - {fileID: 3975452989015616213}
+  - {fileID: 3278968448186607533}
+  legsRight:
+  - {fileID: 1741715690311922385}
+  - {fileID: 9033598823838981034}
+  - {fileID: 8015801538093293334}
+  legAngle: 20
+  legDuration: 0.18
+  jumpPower: 1
+  jumpDuration: 0.35
 --- !u!1 &7827598324473925079
 GameObject:
   m_ObjectHideFlags: 0

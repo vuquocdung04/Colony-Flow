@@ -5,6 +5,8 @@ public static class ColonyPalette
 {
     public static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
+    static MaterialPropertyBlock _editorBlock;
+
     public static readonly string[] Hex =
     {
         "#1C2A47",
@@ -47,12 +49,52 @@ public static class ColonyPalette
 
     public static string ToHex(Color color) => "#" + ColorUtility.ToHtmlStringRGB(color);
 
-    public static void Tint(Renderer target, MaterialPropertyBlock block, Color color)
-    {
-        if (target == null || block == null) return;
+    public static void Tint(Renderer target, Color color) => Tint(target, color, -1);
 
-        target.GetPropertyBlock(block);
-        block.SetColor(BaseColorId, color);
-        target.SetPropertyBlock(block);
+    public static void Tint(Renderer target, Color color, int submesh)
+    {
+        if (target == null) return;
+
+        if (!Application.isPlaying)
+        {
+            EditorTint(target, color, submesh);
+            return;
+        }
+
+        Material material = submesh < 0 ? target.material : SubMaterial(target, submesh);
+        if (material != null) material.SetColor(BaseColorId, color);
+    }
+
+    public static void ClearTint(Renderer target)
+    {
+        if (target == null || Application.isPlaying) return;
+
+        _editorBlock ??= new MaterialPropertyBlock();
+        target.GetPropertyBlock(_editorBlock);
+        _editorBlock.Clear();
+        target.SetPropertyBlock(_editorBlock);
+    }
+
+    static Material SubMaterial(Renderer target, int submesh)
+    {
+        Material[] materials = target.materials;
+        return submesh >= 0 && submesh < materials.Length ? materials[submesh] : null;
+    }
+
+    static void EditorTint(Renderer target, Color color, int submesh)
+    {
+        _editorBlock ??= new MaterialPropertyBlock();
+
+        if (submesh < 0)
+        {
+            target.GetPropertyBlock(_editorBlock);
+            _editorBlock.SetColor(BaseColorId, color);
+            target.SetPropertyBlock(_editorBlock);
+            return;
+        }
+
+        target.GetPropertyBlock(_editorBlock, submesh);
+        _editorBlock.SetColor(BaseColorId, color);
+        target.SetPropertyBlock(_editorBlock, submesh);
     }
 }

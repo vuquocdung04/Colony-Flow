@@ -6,9 +6,11 @@ using UnityEngine;
 
 public abstract class BlockerBase : MonoBehaviour
 {
+    [Header("Refs")]
     public Transform visual;
     public TMP_Text capacityLabel;
 
+    [Space, Header("Size - khớp với vùng che")]
     public Vector3 baseSize = Vector3.one;
     public float sizeMultiplier = 1f;
 
@@ -83,8 +85,12 @@ public abstract class BlockerBase : MonoBehaviour
     {
         RevealCovered();
         Emptied?.Invoke(this);
-        Destroy(gameObject);
+        PlayEmpty(Remove);
     }
+
+    protected virtual void PlayEmpty(Action onComplete) => onComplete?.Invoke();
+
+    void Remove() => Destroy(gameObject);
 
     void RevealCovered()
     {
@@ -96,7 +102,10 @@ public abstract class BlockerBase : MonoBehaviour
 
     void RefreshLabel()
     {
-        if (capacityLabel != null) capacityLabel.text = Capacity.ToString();
+        if (capacityLabel == null) return;
+
+        capacityLabel.text = Capacity.ToString();
+        capacityLabel.gameObject.SetActive(Capacity > 0);
     }
 
     void CacheBaseScale()

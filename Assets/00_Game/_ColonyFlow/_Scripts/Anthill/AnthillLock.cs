@@ -9,7 +9,6 @@ public class AnthillLock : MonoBehaviour
 
     Anthill _anthill;
     AnthillVisual _visual;
-    MaterialPropertyBlock _block;
     bool _active;
 
     public bool IsActive => _active;
@@ -26,9 +25,8 @@ public class AnthillLock : MonoBehaviour
 
     public void SetColor(Color color)
     {
-        _block ??= new MaterialPropertyBlock();
-        ColonyPalette.Tint(body, _block, color);
-        ColonyPalette.Tint(shackle, _block, color);
+        ColonyPalette.Tint(body, color);
+        ColonyPalette.Tint(shackle, color);
     }
 
     public void SetLocked(bool value)

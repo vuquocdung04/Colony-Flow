@@ -3,10 +3,7 @@ using UnityEngine;
 
 public class FoodKey : MonoBehaviour
 {
-    static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
-
     public MeshRenderer meshRenderer;
-    public Material lockedMaterial;
 
     [Header("Spin")]
     public float spinSpeed = 120f;
@@ -16,15 +13,16 @@ public class FoodKey : MonoBehaviour
     public float jumpDuration = 0.6f;
     public Ease jumpEase = Ease.OutQuad;
 
-    MaterialPropertyBlock _block;
-    Material _realMaterial;
     Color _color = Color.white;
-    bool _hasColor;
     bool _locked;
     Tween _spin;
 
     public bool IsLocked => _locked;
     public string ColorHex { get; private set; }
+
+    void OnEnable() => StartSpin();
+
+    void OnDisable() => StopSpin();
 
     public void SetColor(string hex)
     {
@@ -35,33 +33,10 @@ public class FoodKey : MonoBehaviour
     public void SetColor(Color color)
     {
         _color = color;
-        _hasColor = true;
-        if (_locked) return;
-        ApplyColor();
+        ColonyPalette.Tint(meshRenderer, _color);
     }
 
-    public void SetLocked(bool value)
-    {
-        _locked = value;
-        if (meshRenderer == null) return;
-
-        if (value)
-        {
-            if (lockedMaterial != null)
-            {
-                if (_realMaterial == null) _realMaterial = meshRenderer.sharedMaterial;
-                meshRenderer.sharedMaterial = lockedMaterial;
-                ClearBlock();
-            }
-            StopSpin();
-        }
-        else
-        {
-            if (_realMaterial != null) meshRenderer.sharedMaterial = _realMaterial;
-            if (_hasColor) ApplyColor();
-            StartSpin();
-        }
-    }
+    public void SetLocked(bool value) => _locked = value;
 
     public void Unlock() => SetLocked(false);
 
@@ -85,9 +60,12 @@ public class FoodKey : MonoBehaviour
         StopSpin();
         if (spinSpeed <= 0f) return;
 
-        _spin = transform.DOLocalRotate(new Vector3(0f, 360f, 0f), 360f / spinSpeed, RotateMode.LocalAxisAdd)
+        Vector3 baseEuler = transform.localEulerAngles;
+
+        _spin = transform.DOLocalRotate(baseEuler + new Vector3(0f, 360f, 0f), 360f / spinSpeed,
+                                        RotateMode.FastBeyond360)
                          .SetEase(Ease.Linear)
-                         .SetLoops(-1)
+                         .SetLoops(-1, LoopType.Restart)
                          .SetLink(gameObject);
     }
 
@@ -95,25 +73,5 @@ public class FoodKey : MonoBehaviour
     {
         _spin?.Kill();
         _spin = null;
-    }
-
-    void ApplyColor()
-    {
-        if (meshRenderer == null) return;
-
-        _block ??= new MaterialPropertyBlock();
-        meshRenderer.GetPropertyBlock(_block);
-        _block.SetColor(BaseColorId, _color);
-        meshRenderer.SetPropertyBlock(_block);
-    }
-
-    void ClearBlock()
-    {
-        if (meshRenderer == null) return;
-
-        _block ??= new MaterialPropertyBlock();
-        meshRenderer.GetPropertyBlock(_block);
-        _block.Clear();
-        meshRenderer.SetPropertyBlock(_block);
     }
 }

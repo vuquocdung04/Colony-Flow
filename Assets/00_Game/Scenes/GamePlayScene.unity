@@ -5323,8 +5323,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 5
-  m_fontSizeBase: 5
+  m_fontSize: 3
+  m_fontSizeBase: 3
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -5816,7 +5816,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f156db296811c54890c0c3d55c7d9d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridController
-  levelFile: {fileID: 4900000, guid: e94ed25decda67c4bbbfc49316b46a4b, type: 3}
+  levelFile: {fileID: 4900000, guid: 41ddfe94d8b05e94686d118d8f216c84, type: 3}
   gridTop: {fileID: 1008465855}
   gridBottom: {fileID: 720130851}
   waitAreas: {fileID: 1091682126}
@@ -7889,6 +7889,20 @@ MonoBehaviour:
   sizeMultiplier: 1
   meshRenderer: {fileID: 23694121306881549}
   materialIndex: 1
+  doorLeft: {fileID: 4632456948211525}
+  doorRight: {fileID: 4470112706381178}
+  lockTransform: {fileID: 4875609639891638}
+  riseY: 0.5
+  riseDuration: 0.25
+  lockScale: 1.3
+  lockDuration: 0.2
+  doorAngleLeft: 115
+  doorAngleRight: -115
+  doorDuration: 0.3
+  openRiseY: 1
+  openScale: 1.25
+  openDuration: 0.25
+  shrinkDuration: 0.15
 --- !u!4 &4044624640440743
 Transform:
   m_ObjectHideFlags: 0
@@ -8268,6 +8282,13 @@ MonoBehaviour:
   capacityLabel: {fileID: 396636104}
   baseSize: {x: 1, y: 1, z: 1}
   sizeMultiplier: 1
+  riseY: 1
+  riseDuration: 0.25
+  popScale: 1.25
+  popDelay: 0
+  popDuration: 0.25
+  holdDuration: 0.1
+  shrinkDuration: 0.12
 --- !u!4 &4711915071144808
 Transform:
   m_ObjectHideFlags: 0
@@ -8325,13 +8346,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1730243523493348}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: -0.3, z: 0}
   m_LocalScale: {x: 0.375, y: 0.375, z: 0.375}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 4618683146156001}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!4 &4969106256456658
 Transform:
   m_ObjectHideFlags: 0
@@ -8356,7 +8377,7 @@ Transform:
   m_GameObject: {fileID: 1618681795056113}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -0.12}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -18656,18 +18677,6 @@ ParticleSystemRenderer:
   m_MeshWeighting1: 1
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
---- !u!114 &7701076390575929566
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7731568969977284381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!23 &7717398945564525053
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -18676,7 +18685,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7731726513139100745}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -18725,21 +18734,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7731726513139100745}
   m_Mesh: {fileID: 4300000, guid: b1e59f47fa60f284694832eb8c567cc9, type: 2}
---- !u!4 &7729430448693229715
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7731568969977284381}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7729532986667011505}
-  m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
 --- !u!4 &7729532986667011505
 Transform:
   m_ObjectHideFlags: 0
@@ -18754,7 +18748,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7735503446145921558}
-  - {fileID: 7729430448693229715}
   - {fileID: 7729687092523647353}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -0, z: -0}
@@ -18802,23 +18795,6 @@ GameObject:
   - component: {fileID: 7606454748619222793}
   m_Layer: 0
   m_Name: TrailStars
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!1 &7731568969977284381
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7729430448693229715}
-  - component: {fileID: 7701076390575929566}
-  m_Layer: 0
-  m_Name: AnimKey
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20125,6 +20101,17 @@ MonoBehaviour:
   linkView: {fileID: 4703437036870413}
   moveDuration: 0.3
   moveEase: 6
+  emptyRiseY: 1
+  emptyRiseDuration: 0.25
+  emptyScale: 1.2
+  emptyPopDelay: 0
+  emptyPopDuration: 0.25
+  emptyHoldDuration: 0.15
+  emptyShrinkDuration: 0.2
+  wobbleAngle: 12
+  wobbleDuration: 0.4
+  wobbleVibrato: 10
+  wobbleElasticity: 1
 --- !u!1 &8131284945144667042
 GameObject:
   m_ObjectHideFlags: 0
