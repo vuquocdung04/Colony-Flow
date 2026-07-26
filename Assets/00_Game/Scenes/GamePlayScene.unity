@@ -5618,9 +5618,9 @@ MonoBehaviour:
   gridY: 24
   spacingX: 0
   spacingZ: 0
-  entranceSpread: 2.37
-  entranceOffsetX: 0
-  entranceOffsetZ: -7.5
+  entranceSpread: 0.87
+  entranceOffsetX: -0.04
+  entranceOffsetZ: -2.6
   squareBound: {fileID: 166637020}
   fitOnLoad: 1
   alignToSquareCenter: 1

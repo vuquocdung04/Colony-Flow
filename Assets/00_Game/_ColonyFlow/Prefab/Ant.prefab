@@ -979,6 +979,7 @@ MonoBehaviour:
   meshRenderers:
   - {fileID: 275005151771665907}
   - {fileID: 994927509852434115}
+  - {fileID: 3349590040931907034}
   foodHolder: {fileID: 2251052844015923597}
   anim: {fileID: 3846113216498218602}
   moveSpeed: 3
@@ -1011,6 +1012,7 @@ MonoBehaviour:
   legDuration: 0.18
   jumpPower: 1
   jumpDuration: 0.35
+  scaleDelayRatio: 0.4
 --- !u!1 &7827598324473925079
 GameObject:
   m_ObjectHideFlags: 0

@@ -46,17 +46,21 @@ public partial class GridTop
         if (hole == null) return;
 
         Vector3 local = Holder.InverseTransformPoint(hole.position);
-        local.x += entranceOffsetX * _stepX;
 
         float ringZ = local.z > 0f ? _halfDepth : -_halfDepth;
-        float z = ringZ + entranceOffsetZ * _stepZ;
-        float half = (entranceSpread + 0.5f) * _stepX;
         float x = Mathf.Clamp(local.x, -_halfWidth, _halfWidth);
 
-        _gateA = Holder.TransformPoint(new Vector3(x - half, 0f, z));
-        _gateB = Holder.TransformPoint(new Vector3(x + half, 0f, z));
-        _gateBaseA = Holder.TransformPoint(new Vector3(Mathf.Clamp(x - half, -_halfWidth, _halfWidth), 0f, ringZ));
-        _gateBaseB = Holder.TransformPoint(new Vector3(Mathf.Clamp(x + half, -_halfWidth, _halfWidth), 0f, ringZ));
+        Vector3 right = Holder.right;
+        Vector3 forward = Holder.forward;
+
+        Vector3 ring = Holder.TransformPoint(new Vector3(x, 0f, ringZ));
+        Vector3 center = ring + right * entranceOffsetX + forward * entranceOffsetZ;
+        Vector3 span = right * entranceSpread;
+
+        _gateA = center - span;
+        _gateB = center + span;
+        _gateBaseA = ring - span;
+        _gateBaseB = ring + span;
 
         GridApproach side = ResolveSide(local);
         _holeHorizontal = side == GridApproach.Top || side == GridApproach.Bottom;
