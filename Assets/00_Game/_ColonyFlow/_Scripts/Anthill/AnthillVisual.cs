@@ -26,6 +26,7 @@ public class AnthillVisual : MonoBehaviour
     public Ease moveEase = Ease.OutQuad;
 
     [Space, Header("Empty - bay lên rồi co về 0")]
+    public ParticleSystem emptyFx;
     public float emptyRiseY = 1f;
     public float emptyRiseDuration = 0.25f;
     public float emptyScale = 1.2f;
@@ -166,6 +167,7 @@ public class AnthillVisual : MonoBehaviour
                         .Insert(emptyPopDelay, root.DOScale(scale * emptyScale, emptyPopDuration)
                                                    .SetEase(Ease.OutBack))
                         .AppendInterval(emptyHoldDuration)
+                        .AppendCallback(() => ColonyFx.Play(emptyFx, true))
                         .Append(root.DOScale(Vector3.zero, emptyShrinkDuration).SetEase(Ease.InBack))
                         .OnUpdate(RefreshLinks)
                         .OnComplete(() => onComplete?.Invoke())

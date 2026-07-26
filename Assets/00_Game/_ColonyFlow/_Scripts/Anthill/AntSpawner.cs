@@ -52,7 +52,7 @@ public class AntSpawner
         Vector3 position = _spawnPoint != null ? _spawnPoint.position : _fallbackPoint.position;
         if (!_grid.TryReserve(_colorHex, position, out GridTarget target)) return;
 
-        Ant ant = UnityEngine.Object.Instantiate(_prefab, position, _prefab.transform.rotation);
+        Ant ant = SimplePool2.Spawn(_prefab, position, _prefab.transform.rotation);
         ant.SetColor(_colorHex);
         ant.Init(_grid, target);
 

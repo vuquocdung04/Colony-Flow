@@ -7,6 +7,9 @@ public class FoodObj : MonoBehaviour
     public MeshRenderer meshRenderer;
     public Material hiddenMaterial;
 
+    [Space, Header("Fx - lộ ra khỏi vùng ẩn")]
+    public ParticleSystem revealFx;
+
     [Space, Header("Carry - kiến cắp đi")]
     public float carryRotationZ = -140f;
 
@@ -42,23 +45,28 @@ public class FoodObj : MonoBehaviour
 
     public void SetHidden(bool value)
     {
+        bool wasHidden = _hidden;
         _hidden = value;
-        if (meshRenderer == null) return;
 
-        if (value)
+        if (meshRenderer != null)
         {
-            if (hiddenMaterial != null)
+            if (value)
             {
-                if (_realMaterial == null) _realMaterial = meshRenderer.sharedMaterial;
-                meshRenderer.sharedMaterial = hiddenMaterial;
-                ClearBlock();
+                if (hiddenMaterial != null)
+                {
+                    if (_realMaterial == null) _realMaterial = meshRenderer.sharedMaterial;
+                    meshRenderer.sharedMaterial = hiddenMaterial;
+                    ClearBlock();
+                }
+            }
+            else
+            {
+                if (_realMaterial != null) meshRenderer.sharedMaterial = _realMaterial;
+                if (_hasColor) ApplyColor();
             }
         }
-        else
-        {
-            if (_realMaterial != null) meshRenderer.sharedMaterial = _realMaterial;
-            if (_hasColor) ApplyColor();
-        }
+
+        if (wasHidden && !value) ColonyFx.Play(revealFx);
     }
 
     public void Reveal() => SetHidden(false);

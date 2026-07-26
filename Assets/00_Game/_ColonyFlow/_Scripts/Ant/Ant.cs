@@ -43,7 +43,10 @@ public class Ant : MonoBehaviour
     Vector3 _pathStart;
 
     Vector3 _baseEuler;
+    Vector3 _baseScale = Vector3.one;
     float _yaw;
+
+    void Awake() => _baseScale = transform.localScale;
 
     public void SetMaterial(Material material)
     {
@@ -67,18 +70,21 @@ public class Ant : MonoBehaviour
         _grid = grid;
         _target = target;
 
+        transform.localScale = _baseScale;
         _baseEuler = transform.eulerAngles;
         _yaw = _baseEuler.y;
 
         if (_grid == null || !_target.IsValid)
         {
             Debug.LogWarning("[Ant] Init thiếu grid hoặc target.", this);
-            Destroy(gameObject);
+            Despawn();
             return;
         }
 
         _path.Clear();
+        _returnPath.Clear();
         _waypoint = 0;
+        _holdTimer = 0f;
         _pathStart = transform.position;
         _spreadOffset = UnityEngine.Random.Range(-spread, spread);
         _mouthIndex = _grid.BuildApproachPath(transform.position, _target, _path);
@@ -122,11 +128,26 @@ public class Ant : MonoBehaviour
 
         if (anim == null)
         {
-            Destroy(gameObject);
+            Despawn();
             return;
         }
 
-        anim.PlayEnterHole(_grid.HolePosition, () => Destroy(gameObject));
+        anim.PlayEnterHole(_grid.HolePosition, Despawn);
+    }
+
+    void Despawn()
+    {
+        DropFood();
+        StateChanged = null;
+        SimplePool2.Despawn(gameObject);
+    }
+
+    void DropFood()
+    {
+        if (foodHolder == null) return;
+
+        for (int i = foodHolder.childCount - 1; i >= 0; i--)
+            Destroy(foodHolder.GetChild(i).gameObject);
     }
 
     void OnReachFood()

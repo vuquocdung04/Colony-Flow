@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
@@ -7,6 +8,9 @@ public class HungryDoor : BlockerBase
     [Header("Refs")]
     public MeshRenderer meshRenderer;
     public int materialIndex;
+
+    [Tooltip("Mesh chỉ có 1 material, tô cùng màu với meshRenderer ở trên.")]
+    public List<MeshRenderer> plainRenderers = new List<MeshRenderer>();
 
     [Space, Header("Refs - Empty anim")]
     public Transform doorLeft;
@@ -18,6 +22,7 @@ public class HungryDoor : BlockerBase
     public float riseDuration = 0.25f;
 
     [Space, Header("2. Ổ khoá phình rồi biến mất")]
+    public ParticleSystem lockFx;
     public float lockScale = 1.3f;
     public float lockDuration = 0.2f;
 
@@ -44,10 +49,14 @@ public class HungryDoor : BlockerBase
 
     public void SetColor(Color color)
     {
-        if (meshRenderer == null) return;
+        if (meshRenderer != null)
+        {
+            int slot = Mathf.Clamp(materialIndex, 0, meshRenderer.sharedMaterials.Length - 1);
+            ColonyPalette.Tint(meshRenderer, color, slot);
+        }
 
-        int slot = Mathf.Clamp(materialIndex, 0, meshRenderer.sharedMaterials.Length - 1);
-        ColonyPalette.Tint(meshRenderer, color, slot);
+        foreach (MeshRenderer target in plainRenderers)
+            ColonyPalette.Tint(target, color);
     }
 
     protected override bool Accepts(object param) =>
@@ -73,7 +82,11 @@ public class HungryDoor : BlockerBase
 
             sequence.Append(lockTransform.DOScale(lockTransform.localScale * lockScale, lockDuration)
                                          .SetEase(Ease.OutBack))
-                    .AppendCallback(() => Destroy(lockObject));
+                    .AppendCallback(() =>
+                    {
+                        ColonyFx.Play(lockFx, true);
+                        Destroy(lockObject);
+                    });
         }
 
         Tween right = Swing(doorRight, doorAngleRight);
