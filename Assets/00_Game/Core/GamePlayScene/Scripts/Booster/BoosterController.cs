@@ -78,7 +78,7 @@ public partial class BoosterController : InitSingleton<BoosterController>
         item.ChangeState(BoosterState.InUse);
 
         if (NeedsTargetSelection(type)) EnterBoosterInputMode(type);
-        else ApplyInstantEffect(type);
+        else OnBoosterActionSuccess();
     }
 
     public static bool NeedsTargetSelection(BoosterType type)
@@ -124,5 +124,7 @@ public partial class BoosterController : InitSingleton<BoosterController>
         Consume(type);
         Deactivate();
         MarkUsed(type);
+
+        this.PostEvent(EventID.BOOSTER_USED, type);
     }
 }

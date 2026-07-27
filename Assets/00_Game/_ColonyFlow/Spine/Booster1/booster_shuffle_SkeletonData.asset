@@ -24,7 +24,7 @@ MonoBehaviour:
     multiplyMaterials: []
     screenMaterials:
     - pageName: booster_shuffle.png
-      material: {fileID: 2100000, guid: ad62b89d3029a90459c0d623eca342e4, type: 2}
+      material: {fileID: 2100000, guid: 16556e90b61f0bf46934f9259505d3bd, type: 2}
   skeletonDataModifiers: []
   fromAnimation: []
   toAnimation: []

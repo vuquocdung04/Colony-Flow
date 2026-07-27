@@ -19,14 +19,27 @@ public partial class BoosterController
     [TableList(AlwaysExpanded = true, DrawScrollView = false)]
     [SerializeField] private List<BoosterConfig> configs;
 
+    [Title("Debug")]
+    [SerializeField] private bool useConfigData;
+
+    private readonly Dictionary<BoosterType, int> _configAmount = new Dictionary<BoosterType, int>();
+
     private int CurrentLevel => UseProfile.Level.Value;
 
     private BoosterConfig GetConfig(BoosterType type) => configs.Find(c => c.type == type);
 
     private void SeedData()
     {
+        _configAmount.Clear();
+
         foreach (var cfg in configs)
         {
+            if (useConfigData)
+            {
+                _configAmount[cfg.type] = cfg.quantity;
+                continue;
+            }
+
             if (BoosterData.Has(cfg.type)) continue;
             BoosterData.Get(cfg.type).Amount = cfg.quantity;
             BoosterData.MarkDirty();
@@ -62,11 +75,25 @@ public partial class BoosterController
         }
     }
 
-    private int GetQuantity(BoosterType type) => BoosterData.Get(type).Amount;
+    private int GetQuantity(BoosterType type)
+    {
+        if (useConfigData)
+            return _configAmount.TryGetValue(type, out int amount) ? amount : 0;
+
+        return BoosterData.Get(type).Amount;
+    }
 
     private void SetQuantity(BoosterType type, int amount)
     {
-        BoosterData.Get(type).Amount = Mathf.Max(0, amount);
+        amount = Mathf.Max(0, amount);
+
+        if (useConfigData)
+        {
+            _configAmount[type] = amount;
+            return;
+        }
+
+        BoosterData.Get(type).Amount = amount;
         BoosterData.MarkDirty();
     }
 

@@ -125,13 +125,15 @@ public class Anthill : MonoBehaviour
 
         State = next;
 
-        if (changed && !instant && next == AnthillState.Wait)
-        {
-            if (visual != null) visual.OnReachRow0();
-            if (IsLocked) RequestKeyUnlock();
-        }
+        if (changed && !instant && next == AnthillState.Wait) ReachRow0();
 
         if (visual != null) visual.ApplyState(next, instant);
+    }
+
+    public void ReachRow0()
+    {
+        if (visual != null) visual.OnReachRow0();
+        if (IsLocked) RequestKeyUnlock();
     }
 
     public void MoveTo(Vector3 target, bool instant = false, TweenCallback onComplete = null)

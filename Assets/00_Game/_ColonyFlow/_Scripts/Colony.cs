@@ -1,3 +1,4 @@
+using EventDispatcher;
 using UnityEngine;
 
 public class Colony : InitSingleton<Colony>
@@ -20,7 +21,36 @@ public class Colony : InitSingleton<Colony>
         }
 
         gridController.Spawn(waitAreas);
+        this.RegisterListener(EventID.BOOSTER_ACTION, OnBoosterAction);
     }
 
-    public bool AddWaitSlot() => waitAreas != null && waitAreas.AddSlot();
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        this.RemoveListener(EventID.BOOSTER_ACTION, OnBoosterAction);
+    }
+
+    private void OnBoosterAction(object param)
+    {
+        switch ((BoosterType)param)
+        {
+            case BoosterType.Booster0:
+                AddWaitSlot();
+                break;
+
+            case BoosterType.Booster1:
+                SwapRow0();
+                break;
+        }
+    }
+
+    private void AddWaitSlot()
+    {
+        if (waitAreas != null) waitAreas.AddSlot();
+    }
+
+    private void SwapRow0()
+    {
+        if (Bottom != null) Bottom.SwapRow0(Top);
+    }
 }

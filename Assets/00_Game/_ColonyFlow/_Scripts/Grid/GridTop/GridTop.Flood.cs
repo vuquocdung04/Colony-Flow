@@ -20,6 +20,22 @@ public partial class GridTop
         return HasBlock(x, y) && ChooseApproach(x, y, out _);
     }
 
+    public bool HasReachableColor(string hex)
+    {
+        if (_colors == null || string.IsNullOrEmpty(hex)) return false;
+
+        for (int index = 0; index < _colors.Length; index++)
+        {
+            if (!SameColor(_colors[index], hex)) continue;
+            if (_blocked != null && _blocked[index]) continue;
+
+            if (ChooseApproach(ColonyGridIndex.X(index, gridX), ColonyGridIndex.Y(index, gridX), out _))
+                return true;
+        }
+
+        return false;
+    }
+
     void RebuildOpen()
     {
         int count = gridX * gridY;
