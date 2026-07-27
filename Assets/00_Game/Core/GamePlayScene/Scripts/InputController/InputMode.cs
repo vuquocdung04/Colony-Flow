@@ -13,5 +13,11 @@ public abstract class InputMode
     {
     }
 
-    public abstract void HandleClick(RaycastHit hit);
+    public virtual void HandleRay(Ray ray)
+    {
+        if (!Physics.Raycast(ray, out RaycastHit hit)) return;
+        HandleClick(hit);
+    }
+
+    public virtual void HandleClick(RaycastHit hit) { }
 }

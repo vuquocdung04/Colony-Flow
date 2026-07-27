@@ -46,7 +46,30 @@ public class Ant : MonoBehaviour
     Vector3 _baseScale = Vector3.one;
     float _yaw;
 
+    static readonly List<Ant> _live = new List<Ant>();
+
     void Awake() => _baseScale = transform.localScale;
+
+    void OnEnable() => _live.Add(this);
+
+    void OnDisable() => _live.Remove(this);
+
+    public static void ClearColor(string hex)
+    {
+        for (int i = _live.Count - 1; i >= 0; i--)
+        {
+            Ant ant = _live[i];
+            if (ant == null)
+            {
+                _live.RemoveAt(i);
+                continue;
+            }
+
+            if (!ColonyPalette.SameColor(ant.ColorHex, hex)) continue;
+
+            ant.Despawn();
+        }
+    }
 
     public void SetMaterial(Material material)
     {
@@ -135,7 +158,7 @@ public class Ant : MonoBehaviour
         anim.PlayEnterHole(_grid.HolePosition, Despawn);
     }
 
-    void Despawn()
+    public void Despawn()
     {
         DropFood();
         StateChanged = null;

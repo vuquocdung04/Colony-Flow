@@ -41,6 +41,9 @@ public static class ColonyPalette
         return -1;
     }
 
+    public static bool SameColor(string a, string b) =>
+        !string.IsNullOrEmpty(a) && string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
     public static Color ToColor(string hex)
     {
         if (!string.IsNullOrEmpty(hex) && ColorUtility.TryParseHtmlString(hex, out Color color)) return color;

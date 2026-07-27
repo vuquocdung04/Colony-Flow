@@ -53,6 +53,20 @@ public class WaitAreas : MonoBehaviour
         return false;
     }
 
+    public void ClearColor(string hex)
+    {
+        if (_occupants == null || string.IsNullOrEmpty(hex)) return;
+
+        for (int i = _occupants.Length - 1; i >= 0; i--)
+        {
+            Anthill occupant = _occupants[i];
+            if (occupant == null) continue;
+            if (!ColonyPalette.SameColor(occupant.ColorHex, hex)) continue;
+
+            occupant.ClearByColor();
+        }
+    }
+
     public void Release(Anthill anthill)
     {
         if (_occupants == null) return;

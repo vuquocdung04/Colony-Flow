@@ -65,10 +65,6 @@ public class InputController : InitSingleton<InputController>
     private void HandleClick()
     {
         Vector2 screenPos = Pointer.current.position.ReadValue();
-        Ray ray = cam.ScreenPointToRay(screenPos);
-
-        if (!Physics.Raycast(ray, out RaycastHit hit)) return;
-
-        _currentMode.HandleClick(hit);
+        _currentMode.HandleRay(cam.ScreenPointToRay(screenPos));
     }
 }

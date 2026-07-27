@@ -370,12 +370,9 @@ public partial class GridTop : MonoBehaviour
         if (_colors == null || index < 0 || index >= _colors.Length) return;
         if (string.IsNullOrEmpty(_colors[index])) return;
 
-        string hex = _colors[index];
         _colors[index] = null;
         _reserved[index] = false;
         _remaining--;
-
-        if (_blockers.Count > 0) this.PostEvent(EventID.BLOCK_DESTROYED, hex);
 
         OpenCell(ColonyGridIndex.X(index, gridX), ColonyGridIndex.Y(index, gridX));
 

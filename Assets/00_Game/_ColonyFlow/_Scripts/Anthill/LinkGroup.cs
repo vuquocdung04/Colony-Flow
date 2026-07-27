@@ -18,6 +18,25 @@ public class LinkGroup
         return true;
     }
 
+    public void Rebuild()
+    {
+        members.RemoveAll(m => m == null);
+
+        foreach (var s in members)
+            if (s.Link != null) s.Link.Detach();
+
+        if (members.Count < 2) return;
+
+        foreach (var s in members)
+            if (s.Link != null) s.Link.group = this;
+
+        for (int i = 0; i < members.Count - 1; i++)
+        {
+            members[i].Connect(members[i + 1], true);
+            members[i + 1].Connect(members[i], false);
+        }
+    }
+
     public bool CanClick(Anthill clicked, int gridX)
     {
         foreach (var s in members)

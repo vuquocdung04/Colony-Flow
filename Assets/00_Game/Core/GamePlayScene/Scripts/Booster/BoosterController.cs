@@ -77,26 +77,17 @@ public partial class BoosterController : InitSingleton<BoosterController>
         _active = item;
         item.ChangeState(BoosterState.InUse);
 
-        if (NeedsTargetSelection(type)) EnterBoosterInputMode(type);
-        else OnBoosterActionSuccess();
+        if (NeedsTargetSelection(type))
+        {
+            this.PostEvent(EventID.BOOSTER_TARGET_REQUEST, type);
+            return;
+        }
+
+        OnBoosterActionSuccess();
     }
 
     public static bool NeedsTargetSelection(BoosterType type)
         => type == BoosterType.Booster2 || type == BoosterType.Booster3;
-
-    private void EnterBoosterInputMode(BoosterType type)
-    {
-        switch (type)
-        {
-            case BoosterType.Booster2:
-                InputController.Instance.SetBooster2Mode();
-                break;
-
-            case BoosterType.Booster3:
-                InputController.Instance.SetBooster3Mode();
-                break;
-        }
-    }
 
     private void OnDeactivateRequest(object param)
     {

@@ -12,6 +12,7 @@ public class Anthill : MonoBehaviour
 {
     [Header("Refs")]
     public AnthillVisual visual;
+    public Collider mainCollider;
 
     [Space, Header("Spawn")]
     public Ant antPrefab;
@@ -162,22 +163,53 @@ public class Anthill : MonoBehaviour
         if (Link != null && partner != null) Link.Setup(partner, owner);
     }
 
+    LinkGroup Group
+    {
+        get
+        {
+            LinkGroup group = Link != null ? Link.group : null;
+            return group != null && group.Count > 1 ? group : null;
+        }
+    }
+
     public bool TrySelect()
     {
         if (IsTaken || _waitAreas == null) return false;
         if (IsLocked) return Reject();
 
-        LinkGroup group = Link != null ? Link.group : null;
-        if (group != null && group.Count > 1) return TrySelectGroup(group);
+        LinkGroup group = Group;
+        if (group != null) return TrySelectGroup(group);
 
         if (State != AnthillState.Wait) return Reject();
-        if (!_waitAreas.TryPlace(this, out Vector3 slotPosition)) return Reject();
+        if (!TakeSelf()) return Reject();
 
-        IsTaken = true;
-        if (_board != null) _board.Release(this);
-
-        MoveToSlot(slotPosition);
         return true;
+    }
+
+    public void SetPickable(bool value)
+    {
+        if (mainCollider != null) mainCollider.enabled = value;
+    }
+
+    public bool CanBoosterSelect()
+    {
+        if (IsTaken || IsLocked || _waitAreas == null) return false;
+
+        LinkGroup group = Group;
+        if (group == null) return _waitAreas.FreeSlots >= 1;
+
+        foreach (Anthill m in group.members)
+            if (m != null && m.IsLocked) return false;
+
+        return _waitAreas.FreeSlots >= group.Count;
+    }
+
+    public bool BoosterSelect()
+    {
+        if (!CanBoosterSelect()) return false;
+
+        LinkGroup group = Group;
+        return group != null ? TakeGroup(group) : TakeSelf();
     }
 
     bool TrySelectGroup(LinkGroup group)
@@ -185,6 +217,31 @@ public class Anthill : MonoBehaviour
         int gridX = _board != null ? _board.gridX : 1;
         if (!group.CanClick(this, gridX)) return Reject();
         if (_waitAreas.FreeSlots < group.Count) return Reject();
+
+        return TakeGroup(group);
+    }
+
+    bool TakeSelf()
+    {
+        if (!_waitAreas.TryPlace(this, out Vector3 slotPosition)) return false;
+
+        IsTaken = true;
+        if (_board != null) _board.Release(this);
+
+        OnTaken();
+        MoveToSlot(slotPosition);
+        return true;
+    }
+
+    void OnTaken()
+    {
+        ReachRow0();
+        SetState(AnthillState.Wait, true);
+    }
+
+    bool TakeGroup(LinkGroup group)
+    {
+        int gridX = _board != null ? _board.gridX : 1;
 
         List<Anthill> ordered = new List<Anthill>(group.members);
         ordered.Sort((a, b) =>
@@ -200,6 +257,7 @@ public class Anthill : MonoBehaviour
             if (!_waitAreas.TryPlace(m, out Vector3 pos)) continue;
 
             m.IsTaken = true;
+            m.OnTaken();
             m.MoveToSlot(pos);
         }
 
@@ -275,6 +333,26 @@ public class Anthill : MonoBehaviour
     {
         foreach (Anthill member in members)
             if (member != null) member.Remove();
+    }
+
+    public void ClearByColor()
+    {
+        _move?.Kill();
+        DetachFromGroup();
+        ReleaseSlot();
+        if (_board != null) _board.Release(this);
+
+        Remove();
+    }
+
+    void DetachFromGroup()
+    {
+        LinkGroup group = Link != null ? Link.group : null;
+        if (group == null) return;
+
+        group.members.Remove(this);
+        Link.Detach();
+        group.Rebuild();
     }
 
     void Remove() => Destroy(gameObject);

@@ -1,4 +1,5 @@
 using DG.Tweening;
+using EventDispatcher;
 using UnityEngine;
 
 public class FoodObj : MonoBehaviour
@@ -19,6 +20,8 @@ public class FoodObj : MonoBehaviour
     bool _hidden;
 
     public bool IsHidden => _hidden;
+
+    public string ColorHex { get; private set; }
 
     public Vector3 Size
     {
@@ -41,7 +44,11 @@ public class FoodObj : MonoBehaviour
         ApplyColor();
     }
 
-    public void SetColor(string hex) => SetColor(ColonyPalette.ToColor(hex));
+    public void SetColor(string hex)
+    {
+        ColorHex = hex;
+        SetColor(ColonyPalette.ToColor(hex));
+    }
 
     public void SetHidden(bool value)
     {
@@ -75,8 +82,21 @@ public class FoodObj : MonoBehaviour
 
     void ClearBlock() => ColonyPalette.ClearTint(meshRenderer);
 
+    public void Clear()
+    {
+        NotifyDestroyed();
+        Destroy(gameObject);
+    }
+
+    void NotifyDestroyed()
+    {
+        if (!string.IsNullOrEmpty(ColorHex)) this.PostEvent(EventID.BLOCK_DESTROYED, ColorHex);
+    }
+
     public void Collect(Ant ant)
     {
+        NotifyDestroyed();
+
         Transform holder = ant != null ? ant.foodHolder : null;
         if (holder == null)
         {
