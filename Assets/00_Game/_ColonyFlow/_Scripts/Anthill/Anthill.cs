@@ -153,6 +153,8 @@ public class Anthill : MonoBehaviour
         if (onComplete != null) _move.OnComplete(onComplete);
     }
 
+    public void MoveToSlot(Vector3 slotPosition) => MoveTo(slotPosition, false, BeginSpawn);
+
     public void Connect(Anthill partner, bool owner)
     {
         if (Link != null && partner != null) Link.Setup(partner, owner);
@@ -172,7 +174,7 @@ public class Anthill : MonoBehaviour
         IsTaken = true;
         if (_board != null) _board.Release(this);
 
-        MoveTo(slotPosition, false, BeginSpawn);
+        MoveToSlot(slotPosition);
         return true;
     }
 
@@ -196,7 +198,7 @@ public class Anthill : MonoBehaviour
             if (!_waitAreas.TryPlace(m, out Vector3 pos)) continue;
 
             m.IsTaken = true;
-            m.MoveTo(pos, false, m.BeginSpawn);
+            m.MoveToSlot(pos);
         }
 
         if (_board != null) _board.ReleaseGroup(group.members);

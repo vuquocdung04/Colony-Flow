@@ -2,7 +2,8 @@ public enum BoosterType
 {
     Booster0 = 0,
     Booster1 = 1,
-    Booster2 = 2
+    Booster2 = 2,
+    Booster3 = 3
 }
 
 public enum BoosterState

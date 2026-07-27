@@ -61,6 +61,7 @@ public class BuyBoosterBox : BaseBox<BuyBoosterBox>
         BoosterType.Booster0 => "Hand",
         BoosterType.Booster1 => "Shuffle",
         BoosterType.Booster2 => "Super Pig",
+        BoosterType.Booster3 => "Booster 3",
         _ => ""
     };
 
@@ -69,6 +70,7 @@ public class BuyBoosterBox : BaseBox<BuyBoosterBox>
         BoosterType.Booster0 => "Pick any pig or item in the queue",
         BoosterType.Booster1 => "Shuffle the pigs in queues",
         BoosterType.Booster2 => "Select a color to shoot with super powers",
+        BoosterType.Booster3 => "",
         _ => ""
     };
 }

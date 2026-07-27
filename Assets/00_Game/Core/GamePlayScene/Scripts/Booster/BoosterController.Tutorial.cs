@@ -2,10 +2,22 @@ using UnityEngine;
 
 public partial class BoosterController
 {
-    public readonly int[] TutorialLevels = { 3, 6, 9 };
-
     public int GetCurrentTutorialBoosterIndex()
-        => System.Array.IndexOf(TutorialLevels, CurrentLevel);
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i] == null) continue;
+            var cfg = GetConfig(items[i].Type);
+            if (cfg != null && cfg.levelUnlock == CurrentLevel) return i;
+        }
+        return -1;
+    }
+
+    private bool IsTutorialActive(BoosterType type)
+    {
+        var cfg = GetConfig(type);
+        return cfg != null && CurrentLevel == cfg.levelUnlock && !IsTutorialDone(type);
+    }
 
     public void CheckTutorialHighlight()
     {
@@ -13,13 +25,9 @@ public partial class BoosterController
 
         foreach (var item in items)
         {
-            var cfg = GetConfig(item.Type);
-            if (cfg == null) continue;
-            if (CurrentLevel == cfg.levelUnlock && !IsTutorialDone(item.Type))
-            {
-                target = item;
-                break;
-            }
+            if (item == null || !IsTutorialActive(item.Type)) continue;
+            target = item;
+            break;
         }
 
         if (target != null)
@@ -35,40 +43,22 @@ public partial class BoosterController
         HandAnimation.Instance.RemoveHighlightUI(item.gameObject);
         HandAnimation.Instance.KillUI();
 
-        if (type == BoosterType.Booster0) SetTutorialDone(type, true);
-    }
-
-    private void SetupPhase2Tutorial(BoosterType type)
-    {
-        if (type == BoosterType.Booster1 && CurrentLevel == 6
-            && !IsTutorialDone(BoosterType.Booster1))
-        {
-            // Transform targetObj = GamePlayController.Instance.gameScene.GetTutorialTarget();
-            // if (targetObj != null) HandAnimation.Instance.PlayAnimObj(targetObj);
-        }
+        if (!NeedsTargetSelection(type)) SetTutorialDone(type, true);
     }
 
     private void CompletePhase2Tutorial(BoosterType type)
     {
-        if (type == BoosterType.Booster1 && !IsTutorialDone(BoosterType.Booster1))
-        {
-            SetTutorialDone(BoosterType.Booster1, true);
-            HandAnimation.Instance.KillObj();
-        }
+        if (IsTutorialDone(type)) return;
+
+        SetTutorialDone(type, true);
+        HandAnimation.Instance.KillObj();
     }
 
     private void HandleTutorialCancel(BoosterType type)
     {
-        if (type == BoosterType.Booster1 && CurrentLevel == 6 && !IsTutorialDone(BoosterType.Booster1))
-        {
-            HandAnimation.Instance.KillObj();
-            SetTutorialDone(BoosterType.Booster1, true);
-        }
+        if (!IsTutorialActive(type)) return;
 
-        if (type == BoosterType.Booster2 && CurrentLevel == 9 && !IsTutorialDone(BoosterType.Booster2))
-        {
-            HandAnimation.Instance.KillObj();
-            SetTutorialDone(BoosterType.Booster2, true);
-        }
+        HandAnimation.Instance.KillObj();
+        SetTutorialDone(type, true);
     }
 }

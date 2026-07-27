@@ -6,8 +6,8 @@ public class InputController : InitSingleton<InputController>
     private Camera cam;
     private InputMode _currentMode;
     private InputMode _normalMode;
-    private InputMode _booster0Mode;
     private InputMode _booster2Mode;
+    private InputMode _booster3Mode;
     private InputMode _disabledMode;
 
     public override void Init()
@@ -15,8 +15,8 @@ public class InputController : InitSingleton<InputController>
         cam = GamePlayController.Instance.cameraGameplay;
 
         _normalMode = new NormalInputMode();
-        _booster0Mode = new Booster0InputMode();
         _booster2Mode = new Booster2InputMode();
+        _booster3Mode = new Booster3InputMode();
         _disabledMode = new DisabledInputMode();
 
         SetMode(_normalMode);
@@ -50,8 +50,8 @@ public class InputController : InitSingleton<InputController>
         _currentMode?.OnEnter(this);
     }
 
-    public void SetBooster0Mode() => SetMode(_booster0Mode);
     public void SetBooster2Mode() => SetMode(_booster2Mode);
+    public void SetBooster3Mode() => SetMode(_booster3Mode);
     public void RestoreNormalMode() => SetMode(_normalMode);
 
     private void Update()

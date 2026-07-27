@@ -37,7 +37,15 @@ public partial class BoosterController
     {
         foreach (var item in items)
         {
+            if (item == null) continue;
+
             var cfg = GetConfig(item.Type);
+            if (cfg == null)
+            {
+                Debug.LogWarning($"[BoosterController] Thiếu config cho {item.Type}");
+                continue;
+            }
+
             item.SetUnlockLevel(cfg.levelUnlock);
 
             bool unlocked = CurrentLevel >= cfg.levelUnlock;

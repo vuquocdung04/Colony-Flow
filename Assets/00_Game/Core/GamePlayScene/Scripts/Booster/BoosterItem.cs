@@ -13,6 +13,9 @@ public class BoosterItem : MonoBehaviour
     public Sprite IconSprite => iconBooster.sprite;
     public BoosterState CurrentState { get; private set; } = BoosterState.Locked;
     public int Quantity { get; private set; }
+    public bool IsUsable { get; private set; } = true;
+
+    private const float UsedAlpha = 0.5f;
 
     public Button btnMain;
     public Image iconBooster;
@@ -85,6 +88,16 @@ public class BoosterItem : MonoBehaviour
             ChangeState(BoosterState.Empty);
         else if (CurrentState == BoosterState.Empty && qty > 0)
             ChangeState(BoosterState.Available);
+    }
+
+    public void SetUsable(bool value)
+    {
+        IsUsable = value;
+        if (iconBooster == null) return;
+
+        Color color = iconBooster.color;
+        color.a = value ? 1f : UsedAlpha;
+        iconBooster.color = color;
     }
 
     public void SetUnlockLevel(int level)

@@ -7,7 +7,8 @@ public static partial class UIUtils
     {
         btn.onClick.AddListener(delegate
         {
-            AudioManager.Instance.PlaySfx("Click");
+            if (AudioManager.Instance)
+                AudioManager.Instance.PlaySfx("Click");
             Vibration.Vibrate(50);
             callback.Invoke();
         });

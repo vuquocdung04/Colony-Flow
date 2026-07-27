@@ -12,8 +12,6 @@ public class WaitAreas : MonoBehaviour
     [Min(0)] public int slotCount = 5;
     public float spacingX = 1f;
 
-    public GridTop gridTop;
-
     public bool showAimGizmos = true;
     public Color aimColor = new Color(0.2f, 1f, 0.5f, 0.9f);
 
@@ -96,20 +94,58 @@ public class WaitAreas : MonoBehaviour
 
         if (slotPrefab == null || slotCount <= 0) return;
 
-        float startX = -(slotCount - 1) * spacingX * 0.5f;
+        for (int i = 0; i < slotCount; i++) slots.Add(SpawnSlot(i).transform);
 
-        for (int i = 0; i < slotCount; i++)
-        {
-            GameObject slot = InstantiateSlot();
-            slot.name = $"{slotPrefab.name}_{i}";
-            slot.transform.SetParent(Holder, false);
-            slot.transform.localPosition = new Vector3(startX + i * spacingX, 0f, 0f);
-            slot.transform.localRotation = Quaternion.identity;
-            slot.transform.localScale = slotPrefab.transform.localScale;
-            slots.Add(slot.transform);
-        }
-
+        ApplyLayout();
         _occupants = new Anthill[slots.Count];
+    }
+
+    [Button(ButtonSizes.Medium)]
+    public bool AddSlot()
+    {
+        if (slotPrefab == null) return false;
+
+        slots.Add(SpawnSlot(slots.Count).transform);
+        slotCount = slots.Count;
+
+        EnsureOccupants(slots.Count);
+        ApplyLayout();
+        RefreshOccupants();
+        return true;
+    }
+
+    private GameObject SpawnSlot(int index)
+    {
+        GameObject slot = InstantiateSlot();
+        slot.name = $"{slotPrefab.name}_{index}";
+        slot.transform.SetParent(Holder, false);
+        slot.transform.localRotation = Quaternion.identity;
+        slot.transform.localScale = slotPrefab.transform.localScale;
+        return slot;
+    }
+
+    private void ApplyLayout()
+    {
+        float startX = -(slots.Count - 1) * spacingX * 0.5f;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (slots[i] == null) continue;
+            slots[i].localPosition = new Vector3(startX + i * spacingX, 0f, 0f);
+        }
+    }
+
+    private void RefreshOccupants()
+    {
+        if (_occupants == null) return;
+
+        for (int i = 0; i < _occupants.Length && i < slots.Count; i++)
+        {
+            Anthill occupant = _occupants[i];
+            if (occupant == null || slots[i] == null) continue;
+
+            occupant.MoveToSlot(slots[i].position);
+        }
     }
 
     [Button(ButtonSizes.Medium)]
@@ -138,7 +174,10 @@ public class WaitAreas : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (!showAimGizmos || gridTop == null || slots == null) return;
+        if (!showAimGizmos || slots == null) return;
+
+        GridTop gridTop = Colony.Instance != null ? Colony.Instance.Top : null;
+        if (gridTop == null) return;
 
         float radius = gridTop.CellSize.x * 0.15f;
 

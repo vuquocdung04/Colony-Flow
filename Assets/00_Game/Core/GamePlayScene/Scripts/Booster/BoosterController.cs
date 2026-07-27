@@ -12,6 +12,7 @@ public partial class BoosterController : InitSingleton<BoosterController>
     {
         SeedData();
         ApplyConfigToItems();
+        RefreshUsable();
 
         this.RegisterListener(EventID.BOOSTER_USE_REQUEST, OnUseRequest);
         this.RegisterListener(EventID.BOOSTER_DEACTIVATE_REQUEST, OnDeactivateRequest);
@@ -67,26 +68,34 @@ public partial class BoosterController : InitSingleton<BoosterController>
             return;
         }
 
-        if (!CanUseBooster(type)) return;
+        if (!CanUse(type))
+        {
+            ToastManager.Instance.ShowToast("This Booster can't be used now!");
+            return;
+        }
 
         _active = item;
         item.ChangeState(BoosterState.InUse);
+
+        if (NeedsTargetSelection(type)) EnterBoosterInputMode(type);
+        else ApplyInstantEffect(type);
     }
 
-    private bool CanUseBooster(BoosterType type)
+    public static bool NeedsTargetSelection(BoosterType type)
+        => type == BoosterType.Booster2 || type == BoosterType.Booster3;
+
+    private void EnterBoosterInputMode(BoosterType type)
     {
         switch (type)
         {
-            case BoosterType.Booster0:
-                return true;
-
-            case BoosterType.Booster1:
-                return true;
-
             case BoosterType.Booster2:
-                return true;
+                InputController.Instance.SetBooster2Mode();
+                break;
+
+            case BoosterType.Booster3:
+                InputController.Instance.SetBooster3Mode();
+                break;
         }
-        return true;
     }
 
     private void OnDeactivateRequest(object param)
@@ -108,9 +117,12 @@ public partial class BoosterController : InitSingleton<BoosterController>
     public void OnBoosterActionSuccess()
     {
         if (_active == null) return;
-        CompletePhase2Tutorial(_active.Type);
 
-        Consume(_active.Type);
+        BoosterType type = _active.Type;
+        CompletePhase2Tutorial(type);
+
+        Consume(type);
         Deactivate();
+        MarkUsed(type);
     }
 }

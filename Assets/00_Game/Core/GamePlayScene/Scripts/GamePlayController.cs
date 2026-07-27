@@ -7,6 +7,7 @@ public class GamePlayController : Singleton<GamePlayController>
     public Camera cameraUI;
     public Camera cameraGameplay;
     public GameScene gameScene;
+    public Colony colony;
     public BoosterController boosterController;
     public HandAnimation handAnimation;
     public GameFlow gameFlow;
@@ -23,6 +24,7 @@ public class GamePlayController : Singleton<GamePlayController>
     private void InitInstances()
     {
         gameScene.InitInstance();
+        colony.InitInstance();
         handAnimation.InitInstance();
         boosterController.InitInstance();
         inputController.InitInstance();
@@ -32,6 +34,7 @@ public class GamePlayController : Singleton<GamePlayController>
     private async Awaitable Init()
     {
         gameScene.Init();
+        colony.Init();
         handAnimation.Init();
         boosterController.Init();
         inputController.Init();

@@ -1,4 +1,3 @@
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class GridController : MonoBehaviour
@@ -6,14 +5,10 @@ public class GridController : MonoBehaviour
     public TextAsset levelFile;
     public GridTop gridTop;
     public GridBottom gridBottom;
-    public WaitAreas waitAreas;
 
     public ColonyLevelData Data { get; private set; }
 
-    void Awake() => Spawn();
-
-    [Button(ButtonSizes.Large), GUIColor(0.45f, 0.85f, 0.5f)]
-    public void Spawn()
+    public void Spawn(WaitAreas waitAreas)
     {
         if (levelFile == null)
         {
@@ -21,10 +16,10 @@ public class GridController : MonoBehaviour
             return;
         }
 
-        Spawn(levelFile.text);
+        Spawn(levelFile.text, waitAreas);
     }
 
-    public void Spawn(string json)
+    public void Spawn(string json, WaitAreas waitAreas)
     {
         Data = ColonyLevelIO.FromJson(json);
         if (Data == null)
@@ -37,7 +32,6 @@ public class GridController : MonoBehaviour
         if (gridBottom != null) gridBottom.Load(Data.bottom, gridTop, waitAreas);
     }
 
-    [Button(ButtonSizes.Medium)]
     public void Clear()
     {
         if (gridTop != null) gridTop.Clear();
