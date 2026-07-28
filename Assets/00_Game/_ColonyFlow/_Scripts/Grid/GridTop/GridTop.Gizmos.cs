@@ -82,12 +82,42 @@ public partial class GridTop
 
         Gizmos.matrix = Matrix4x4.identity;
         Gizmos.color = entranceColor;
-        Gizmos.DrawLine(_gateA, _gateB);
+        DrawGateArcGizmos();
         Gizmos.DrawLine(_gateA, _gateBaseA);
         Gizmos.DrawLine(_gateB, _gateBaseB);
         Gizmos.DrawLine(_gateBaseA, _gateBaseB);
         Gizmos.DrawWireSphere(_gateA, radius);
         Gizmos.DrawWireSphere(_gateB, radius);
+    }
+
+    void DrawGateArcGizmos()
+    {
+        if (_gateArc == null || _gateArc.Length < 2)
+        {
+            DrawGateSegment(_gateA, _gateB);
+            return;
+        }
+
+        for (int i = 0; i < _gateArc.Length - 1; i++)
+            DrawGateSegment(_gateArc[i], _gateArc[i + 1]);
+    }
+
+    void DrawGateSegment(Vector3 from, Vector3 to)
+    {
+        if (!entranceDashed || entranceDashSize <= 0f)
+        {
+            Gizmos.DrawLine(from, to);
+            return;
+        }
+
+        float length = Vector3.Distance(from, to);
+        if (length <= Mathf.Epsilon) return;
+
+        int steps = Mathf.Max(1, Mathf.CeilToInt(length / entranceDashSize));
+        Vector3 step = (to - from) / steps;
+
+        for (int i = 0; i < steps; i += 2)
+            Gizmos.DrawLine(from + step * i, from + step * Mathf.Min(i + 1, steps));
     }
 
     void DrawHoleLink(int x, int y, Vector3 size, Vector3 scale)

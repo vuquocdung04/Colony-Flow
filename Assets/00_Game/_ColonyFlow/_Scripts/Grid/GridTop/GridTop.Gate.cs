@@ -4,8 +4,11 @@ public partial class GridTop
 {
     [System.NonSerialized] bool _gateReady;
     [System.NonSerialized] Vector3 _gateA, _gateB, _gateBaseA, _gateBaseB;
+    [System.NonSerialized] Vector3[] _gateArc;
     [System.NonSerialized] bool _holeHorizontal = true;
     [System.NonSerialized] int _holeRing = -BorderRing;
+
+    public Vector3[] GateArc => _gateArc;
 
     public bool TryGetHoleEdge(out bool horizontal, out int ringFixed)
     {
@@ -40,6 +43,7 @@ public partial class GridTop
     {
         _gateReady = false;
         _gateA = _gateB = _gateBaseA = _gateBaseB = Vector3.zero;
+        _gateArc = null;
         _holeHorizontal = true;
         _holeRing = -BorderRing;
 
@@ -62,6 +66,8 @@ public partial class GridTop
         _gateBaseA = ring - span;
         _gateBaseB = ring + span;
 
+        BuildGateArc(center, right, forward);
+
         GridApproach side = ResolveSide(local);
         _holeHorizontal = side == GridApproach.Top || side == GridApproach.Bottom;
 
@@ -70,6 +76,37 @@ public partial class GridTop
         else _holeRing = -BorderRing;
 
         _gateReady = true;
+    }
+
+    void BuildGateArc(Vector3 center, Vector3 right, Vector3 forward)
+    {
+        int segments = Mathf.Max(1, entranceSub);
+        float half = entranceSpread;
+
+        if (segments == 1 || half <= Mathf.Epsilon || Mathf.Abs(entranceRadius) <= Mathf.Epsilon)
+        {
+            _gateArc = new[] { _gateA, _gateB };
+            return;
+        }
+
+        float sign = Mathf.Sign(entranceRadius);
+        float radius = Mathf.Max(Mathf.Abs(entranceRadius), half);
+        float apothem = Mathf.Sqrt(Mathf.Max(0f, radius * radius - half * half));
+        float span = Mathf.Asin(Mathf.Clamp01(half / radius));
+
+        Vector3 pivot = center - forward * (apothem * sign);
+
+        _gateArc = new Vector3[segments + 1];
+        for (int i = 0; i <= segments; i++)
+        {
+            float angle = Mathf.Lerp(-span, span, i / (float)segments);
+            _gateArc[i] = pivot
+                        + right * (radius * Mathf.Sin(angle))
+                        + forward * (radius * Mathf.Cos(angle) * sign);
+        }
+
+        _gateArc[0] = _gateA;
+        _gateArc[segments] = _gateB;
     }
 
     GridApproach ResolveSide(Vector3 local)

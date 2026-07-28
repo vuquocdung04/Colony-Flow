@@ -21,6 +21,8 @@ public partial class GridTop : MonoBehaviour
     [BoxGroup("Entrance"), Min(0f)] public float entranceSpread = 0f;
     [BoxGroup("Entrance")] public float entranceOffsetX = 0f;
     [BoxGroup("Entrance")] public float entranceOffsetZ = 0f;
+    [BoxGroup("Entrance")] public float entranceRadius = 0f;
+    [BoxGroup("Entrance"), Min(1)] public int entranceSub = 1;
 
     [BoxGroup("Fit")] public Renderer squareBound;
     [BoxGroup("Fit")] public bool fitOnLoad = true;
@@ -32,6 +34,8 @@ public partial class GridTop : MonoBehaviour
     [BoxGroup("Gizmos")] public Color borderRingColor = new Color(1f, 0.55f, 0.1f, 0.75f);
     [BoxGroup("Gizmos")] public Color squareBoundColor = new Color(1f, 1f, 1f, 0.5f);
     [BoxGroup("Gizmos")] public Color entranceColor = Color.cyan;
+    [BoxGroup("Gizmos")] public bool entranceDashed = false;
+    [BoxGroup("Gizmos"), Min(0.01f)] public float entranceDashSize = 0.25f;
     [BoxGroup("Gizmos")] public Color holeEdgeColor = Color.black;
 
     [System.NonSerialized] string[] _colors;

@@ -137,18 +137,36 @@ public partial class GridTop
         hitGate = false;
         gateHit = gatePost = Vector3.zero;
 
-        if (_gateReady)
+        if (_gateReady && _gateArc != null && _gateArc.Length >= 2)
         {
             Vector2 from = new Vector2(fromWorld.x, fromWorld.z);
             Vector2 to = new Vector2(edge.x, edge.z);
-            Vector2 a = new Vector2(_gateA.x, _gateA.z);
-            Vector2 b = new Vector2(_gateB.x, _gateB.z);
+            float nearest = float.MaxValue;
 
-            if (SegmentHit(from, to, a, b, out Vector2 hit, out float u))
+            for (int i = 0; i < _gateArc.Length - 1; i++)
             {
+                Vector3 head = _gateArc[i];
+                Vector3 tail = _gateArc[i + 1];
+                Vector2 a = new Vector2(head.x, head.z);
+                Vector2 b = new Vector2(tail.x, tail.z);
+
+                if (!SegmentHit(from, to, a, b, out Vector2 hit, out float u)) continue;
+
+                float distance = (hit - from).sqrMagnitude;
+                if (distance >= nearest) continue;
+
+                nearest = distance;
                 hitGate = true;
-                gateHit = new Vector3(hit.x, Mathf.Lerp(_gateA.y, _gateB.y, u), hit.y);
-                gatePost = (hit - a).sqrMagnitude <= (hit - b).sqrMagnitude ? _gateA : _gateB;
+                gateHit = new Vector3(hit.x, Mathf.Lerp(head.y, tail.y, u), hit.y);
+            }
+
+            if (hitGate)
+            {
+                Vector2 flat = new Vector2(gateHit.x, gateHit.z);
+                Vector2 endA = new Vector2(_gateA.x, _gateA.z);
+                Vector2 endB = new Vector2(_gateB.x, _gateB.z);
+
+                gatePost = (flat - endA).sqrMagnitude <= (flat - endB).sqrMagnitude ? _gateA : _gateB;
                 boundary = gateHit;
                 return;
             }

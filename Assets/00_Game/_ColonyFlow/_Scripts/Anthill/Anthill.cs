@@ -23,6 +23,11 @@ public class Anthill : MonoBehaviour
     public float moveDuration = 0.3f;
     public Ease moveEase = Ease.OutQuad;
 
+    [Space, Header("Jump - lên waitArea")]
+    public float jumpPower = 1.5f;
+    [Min(1)] public int jumpCount = 1;
+    public float jumpDuration = 0.45f;
+
     public AnthillState State { get; private set; } = AnthillState.Sleep;
 
     public string ColorHex { get; private set; }
@@ -156,7 +161,18 @@ public class Anthill : MonoBehaviour
         if (onComplete != null) _move.OnComplete(onComplete);
     }
 
-    public void MoveToSlot(Vector3 slotPosition) => MoveTo(slotPosition, false, BeginSpawn);
+    public void JumpTo(Vector3 target, TweenCallback onComplete = null)
+    {
+        _move?.Kill();
+
+        _move = transform.DOJump(target, jumpPower, jumpCount, jumpDuration)
+                         .SetLink(gameObject);
+
+        if (visual != null) _move.OnUpdate(visual.RefreshLinks);
+        if (onComplete != null) _move.OnComplete(onComplete);
+    }
+
+    public void MoveToSlot(Vector3 slotPosition) => JumpTo(slotPosition, BeginSpawn);
 
     public void Connect(Anthill partner, bool owner)
     {
