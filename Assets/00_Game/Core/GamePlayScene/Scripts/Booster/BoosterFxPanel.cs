@@ -4,7 +4,7 @@ using Sirenix.OdinInspector;
 using Spine.Unity;
 using UnityEngine;
 
-public class BoosterFxPanel : Singleton<BoosterFxPanel>
+public class BoosterFxPanel : MonoBehaviour
 {
     [System.Serializable]
     public class FxConfig
@@ -22,24 +22,15 @@ public class BoosterFxPanel : Singleton<BoosterFxPanel>
     [TableList(AlwaysExpanded = true, DrawScrollView = false)]
     [SerializeField] private List<FxConfig> configs = new List<FxConfig>();
 
-    protected override void OnAwake()
+    private void Awake()
     {
         Hide();
         this.RegisterListener(EventID.BOOSTER_USED, OnBoosterUsed);
     }
 
-    protected override void OnDestroy()
+    private void OnDestroy()
     {
-        base.OnDestroy();
         this.RemoveListener(EventID.BOOSTER_USED, OnBoosterUsed);
-    }
-
-    public float GetActionDuration(BoosterType type)
-    {
-        FxConfig cfg = configs.Find(c => c.type == type);
-        if (cfg == null) return 0f;
-
-        return Mathf.Max(0f, AnimLength(cfg) * cfg.actionPercent);
     }
 
     private void OnBoosterUsed(object param)
@@ -49,7 +40,7 @@ public class BoosterFxPanel : Singleton<BoosterFxPanel>
 
         if (cfg == null || cfg.spine == null || string.IsNullOrEmpty(cfg.animKey))
         {
-            this.PostEvent(EventID.BOOSTER_ACTION, type);
+            this.PostEvent(EventID.BOOSTER_ACTION, new BoosterActionInfo(type, 0f));
             return;
         }
 
@@ -60,29 +51,20 @@ public class BoosterFxPanel : Singleton<BoosterFxPanel>
     {
         Spine.TrackEntry entry = cfg.spine.AnimationState.SetAnimation(0, cfg.animKey, false);
         float length = entry != null && entry.Animation != null ? entry.Animation.Duration : 0f;
+        float actionDuration = Mathf.Max(0f, length * cfg.actionPercent);
 
         Show(cfg.spine);
 
         if (cfg.actionDelay > 0f)
             await Awaitable.WaitForSecondsAsync(cfg.actionDelay, destroyCancellationToken);
 
-        this.PostEvent(EventID.BOOSTER_ACTION, type);
+        this.PostEvent(EventID.BOOSTER_ACTION, new BoosterActionInfo(type, actionDuration));
 
         float remain = length - cfg.actionDelay;
         if (remain > 0f)
             await Awaitable.WaitForSecondsAsync(remain, destroyCancellationToken);
 
         Hide();
-    }
-
-    private static float AnimLength(FxConfig cfg)
-    {
-        if (cfg.spine == null || cfg.spine.skeletonDataAsset == null || string.IsNullOrEmpty(cfg.animKey))
-            return 0f;
-
-        Spine.SkeletonData data = cfg.spine.skeletonDataAsset.GetSkeletonData(true);
-        Spine.Animation anim = data != null ? data.FindAnimation(cfg.animKey) : null;
-        return anim != null ? anim.Duration : 0f;
     }
 
     private void Show(SkeletonGraphic target)

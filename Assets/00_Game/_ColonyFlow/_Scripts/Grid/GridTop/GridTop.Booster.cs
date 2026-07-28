@@ -11,6 +11,22 @@ public partial class GridTop
     public string ColorAt(int index) =>
         _colors != null && index >= 0 && index < _colors.Length ? _colors[index] : null;
 
+    public bool CanBoosterPick(int index) =>
+        !IsBlocked(index) && !string.IsNullOrEmpty(ColorAt(index));
+
+    public void SetBoosterPicking(bool value)
+    {
+        if (_cells == null) return;
+
+        for (int index = 0; index < _cells.Length; index++)
+        {
+            FoodObj cell = _cells[index];
+            if (cell == null) continue;
+
+            HighlightObject.Set(cell.gameObject, value && CanBoosterPick(index));
+        }
+    }
+
     public int ClearColor(string hex, float duration)
     {
         if (_colors == null || string.IsNullOrEmpty(hex)) return 0;

@@ -45,7 +45,7 @@ public partial class BoosterController : InitSingleton<BoosterController>
         _active.SetData(GetQuantity(_active.Type));
         _active = null;
 
-        InputController.Instance.RestoreNormalMode();
+        this.PostEvent(EventID.INPUT_MODE_REQUEST, InputModeId.Normal);
     }
 
     private void OnBuyRequest(object param)
@@ -102,7 +102,7 @@ public partial class BoosterController : InitSingleton<BoosterController>
         _active.ChangeState(BoosterState.Available);
         _active.SetData(GetQuantity(_active.Type));
         _active = null;
-        InputController.Instance.RestoreNormalMode();
+        this.PostEvent(EventID.INPUT_MODE_REQUEST, InputModeId.Normal);
     }
 
     public void OnBoosterActionSuccess()

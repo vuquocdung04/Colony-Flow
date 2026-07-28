@@ -18,6 +18,9 @@ public class FoodObj : MonoBehaviour
     public Ease clearEase = Ease.InQuad;
     [Range(0f, 1f)] public float shrinkPortion = 0.35f;
     public float spinAngle = 540f;
+    public float clearLift = 1f;
+    [Range(0f, 1f)] public float liftPortion = 0.25f;
+    public Ease liftEase = Ease.OutQuad;
 
     const float ShrinkMultiplier = 0.5f;
 
@@ -104,10 +107,17 @@ public class FoodObj : MonoBehaviour
         Vector3 spin = Random.onUnitSphere * spinAngle;
         Vector3 shrinkScale = transform.localScale * ShrinkMultiplier;
         float shrink = duration * shrinkPortion;
+        float lift = clearLift > 0f ? duration * liftPortion : 0f;
 
         Sequence sequence = DOTween.Sequence().SetLink(gameObject);
 
-        sequence.Insert(delay, transform.DOMove(center, duration).SetEase(clearEase));
+        if (lift > 0f)
+        {
+            float liftY = transform.position.y + clearLift;
+            sequence.Insert(delay, transform.DOMoveY(liftY, lift).SetEase(liftEase));
+        }
+
+        sequence.Insert(delay + lift, transform.DOMove(center, duration - lift).SetEase(clearEase));
         sequence.Insert(delay, transform.DORotate(spin, duration, RotateMode.LocalAxisAdd).SetEase(Ease.Linear));
         sequence.Insert(delay + duration - shrink, transform.DOScale(shrinkScale, shrink).SetEase(Ease.InQuad));
 

@@ -1,3 +1,4 @@
+using EventDispatcher;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,13 +22,26 @@ public class InputController : InitSingleton<InputController>
 
         SetMode(_normalMode);
 
+        this.RegisterListener(EventID.INPUT_MODE_REQUEST, OnModeRequest);
         GameFlow.Instance.OnStateEntered += OnGameStateChanged;
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
+        this.RemoveListener(EventID.INPUT_MODE_REQUEST, OnModeRequest);
         GameFlow.Instance.OnStateEntered -= OnGameStateChanged;
+    }
+
+    private void OnModeRequest(object param)
+    {
+        switch ((InputModeId)param)
+        {
+            case InputModeId.Normal: SetMode(_normalMode); break;
+            case InputModeId.Booster2: SetMode(_booster2Mode); break;
+            case InputModeId.Booster3: SetMode(_booster3Mode); break;
+            case InputModeId.Disabled: SetMode(_disabledMode); break;
+        }
     }
 
     private void OnGameStateChanged(GameState newState)
@@ -43,16 +57,12 @@ public class InputController : InitSingleton<InputController>
             SetMode(_normalMode);
     }
 
-    public void SetMode(InputMode newMode)
+    private void SetMode(InputMode newMode)
     {
         _currentMode?.OnExit();
         _currentMode = newMode;
         _currentMode?.OnEnter(this);
     }
-
-    public void SetBooster2Mode() => SetMode(_booster2Mode);
-    public void SetBooster3Mode() => SetMode(_booster3Mode);
-    public void RestoreNormalMode() => SetMode(_normalMode);
 
     private void Update()
     {

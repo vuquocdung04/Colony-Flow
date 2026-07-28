@@ -18,7 +18,10 @@ public partial class GridBottom
         foreach (Anthill item in _slots)
         {
             if (item == null) continue;
-            item.SetPickable(!value || item.CanBoosterSelect());
+
+            bool selectable = item.CanBoosterSelect();
+            item.SetPickable(!value || selectable);
+            HighlightObject.Set(item.gameObject, value && selectable);
         }
     }
 }

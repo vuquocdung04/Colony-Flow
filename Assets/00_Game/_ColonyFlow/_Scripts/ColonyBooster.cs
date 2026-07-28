@@ -21,7 +21,9 @@ public class ColonyBooster : MonoBehaviour
 
     private void OnAction(object param)
     {
-        switch ((BoosterType)param)
+        BoosterActionInfo info = (BoosterActionInfo)param;
+
+        switch (info.Type)
         {
             case BoosterType.Booster0:
                 AddWaitSlot();
@@ -32,7 +34,7 @@ public class ColonyBooster : MonoBehaviour
                 break;
 
             case BoosterType.Booster3:
-                ClearColor();
+                ClearColor(info.Duration);
                 break;
         }
     }
@@ -48,7 +50,7 @@ public class ColonyBooster : MonoBehaviour
                 break;
 
             case BoosterType.Booster3:
-                InputController.Instance.SetBooster3Mode();
+                this.PostEvent(EventID.INPUT_MODE_REQUEST, InputModeId.Booster3);
                 break;
         }
     }
@@ -76,20 +78,16 @@ public class ColonyBooster : MonoBehaviour
             return;
         }
 
-        InputController.Instance.SetBooster2Mode();
+        this.PostEvent(EventID.INPUT_MODE_REQUEST, InputModeId.Booster2);
     }
 
-    private void ClearColor()
+    private void ClearColor(float duration)
     {
         string hex = _pickedColor;
         _pickedColor = null;
 
         Colony colony = Colony.Instance;
         if (string.IsNullOrEmpty(hex) || colony == null) return;
-
-        float duration = BoosterFxPanel.Instance != null
-            ? BoosterFxPanel.Instance.GetActionDuration(BoosterType.Booster3)
-            : 0f;
 
         if (colony.Top != null) colony.Top.ClearColor(hex, duration);
         if (colony.Bottom != null) colony.Bottom.ClearColor(hex);

@@ -9,3 +9,4 @@ public class BoosterData : MultiSaveData<BoosterData, BoosterType, BoosterRecord
 {
     public override string Key => "boosters";
 }
+
