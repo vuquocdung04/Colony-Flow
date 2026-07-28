@@ -168,16 +168,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e3307e90b3d8c140a62ed1bda2f9794, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BoosterFxPanel
+  dontDestroyOnLoad: 0
   group: {fileID: 1078288247}
   configs:
   - type: 1
     spine: {fileID: 842498607}
     animKey: animation
-    actionDelay: 0
+    actionDelay: 0.5
+    actionPercent: 1
   - type: 3
     spine: {fileID: 1448216307}
     animKey: animation
     actionDelay: 0
+    actionPercent: 0.8
 --- !u!1 &58915959
 GameObject:
   m_ObjectHideFlags: 0
@@ -6574,6 +6577,7 @@ Transform:
   m_Children:
   - {fileID: 859142282}
   - {fileID: 517489872}
+  - {fileID: 1950931277}
   m_Father: {fileID: 1798942562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1008465855
@@ -6588,12 +6592,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f8e84456a7a41a4b8d8abb410351cbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridTop
+  clearStagger: 0.55
   foodObj: {fileID: 4618683146156002}
   foodKey: {fileID: 7731746462255731648}
   cookieBlocker: {fileID: 4709869274951056}
   hungryDoor: {fileID: 4025902077249851}
   holder: {fileID: 517489872}
   hole: {fileID: 859142282}
+  suckPoint: {fileID: 1950931277}
   gridX: 24
   gridY: 24
   spacingX: 0
@@ -6703,6 +6709,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1082685464}
   - component: {fileID: 1082685465}
+  - component: {fileID: 1082685466}
   m_Layer: 0
   m_Name: _Colony
   m_TagString: Untagged
@@ -6742,6 +6749,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Colony
   gridController: {fileID: 1798942563}
   waitAreas: {fileID: 1091682126}
+  colonyBooster: {fileID: 1082685466}
+--- !u!114 &1082685466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1082685463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78a3b3fbb531a9b47ac02755a742bd01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ColonyBooster
 --- !u!1 &1082765048
 GameObject:
   m_ObjectHideFlags: 0
@@ -16968,6 +16988,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 839897744}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+--- !u!1 &1950931276
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1950931277}
+  m_Layer: 0
+  m_Name: point for Booster3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1950931277
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950931276}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.12, y: 0, z: -4.38}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1008465854}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2008187173
 GameObject:
   m_ObjectHideFlags: 0
@@ -18803,6 +18854,9 @@ MonoBehaviour:
   hiddenMaterial: {fileID: 2100000, guid: ceb03b9305c60e041bef49efccbfcee7, type: 2}
   revealFx: {fileID: 1383781353}
   carryRotationZ: -140
+  clearEase: 5
+  shrinkPortion: 0.35
+  spinAngle: 540
 --- !u!4 &4632456948211525
 Transform:
   m_ObjectHideFlags: 0

@@ -4,7 +4,7 @@ using Sirenix.OdinInspector;
 using Spine.Unity;
 using UnityEngine;
 
-public class BoosterFxPanel : MonoBehaviour
+public class BoosterFxPanel : Singleton<BoosterFxPanel>
 {
     [System.Serializable]
     public class FxConfig
@@ -14,6 +14,7 @@ public class BoosterFxPanel : MonoBehaviour
         public SkeletonGraphic spine;
         public string animKey;
         public float actionDelay;
+        [Range(0f, 1f)] public float actionPercent = 1f;
     }
 
     [SerializeField] private CanvasGroup group;
@@ -21,13 +22,25 @@ public class BoosterFxPanel : MonoBehaviour
     [TableList(AlwaysExpanded = true, DrawScrollView = false)]
     [SerializeField] private List<FxConfig> configs = new List<FxConfig>();
 
-    private void Awake()
+    protected override void OnAwake()
     {
         Hide();
         this.RegisterListener(EventID.BOOSTER_USED, OnBoosterUsed);
     }
 
-    private void OnDestroy() => this.RemoveListener(EventID.BOOSTER_USED, OnBoosterUsed);
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        this.RemoveListener(EventID.BOOSTER_USED, OnBoosterUsed);
+    }
+
+    public float GetActionDuration(BoosterType type)
+    {
+        FxConfig cfg = configs.Find(c => c.type == type);
+        if (cfg == null) return 0f;
+
+        return Mathf.Max(0f, AnimLength(cfg) * cfg.actionPercent);
+    }
 
     private void OnBoosterUsed(object param)
     {
@@ -60,6 +73,16 @@ public class BoosterFxPanel : MonoBehaviour
             await Awaitable.WaitForSecondsAsync(remain, destroyCancellationToken);
 
         Hide();
+    }
+
+    private static float AnimLength(FxConfig cfg)
+    {
+        if (cfg.spine == null || cfg.spine.skeletonDataAsset == null || string.IsNullOrEmpty(cfg.animKey))
+            return 0f;
+
+        Spine.SkeletonData data = cfg.spine.skeletonDataAsset.GetSkeletonData(true);
+        Spine.Animation anim = data != null ? data.FindAnimation(cfg.animKey) : null;
+        return anim != null ? anim.Duration : 0f;
     }
 
     private void Show(SkeletonGraphic target)

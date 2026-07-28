@@ -6,7 +6,7 @@ public class Booster3InputMode : InputMode
     {
         Colony colony = Colony.Instance;
         GridTop top = colony != null ? colony.Top : null;
-        if (top == null) return;
+        if (top == null || colony.Booster == null) return;
 
         if (!top.TryPickCell(ray, out int x, out int y)) return;
 
@@ -16,7 +16,7 @@ public class Booster3InputMode : InputMode
         string hex = top.ColorAt(index);
         if (string.IsNullOrEmpty(hex)) return;
 
-        colony.PickColor(hex);
+        colony.Booster.PickColor(hex);
         BoosterController.Instance.OnBoosterActionSuccess();
     }
 }

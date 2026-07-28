@@ -14,6 +14,13 @@ public class FoodObj : MonoBehaviour
     [Space, Header("Carry - kiến cắp đi")]
     public float carryRotationZ = -140f;
 
+    [Space, Header("Clear - booster hút vào")]
+    public Ease clearEase = Ease.InQuad;
+    [Range(0f, 1f)] public float shrinkPortion = 0.35f;
+    public float spinAngle = 540f;
+
+    const float ShrinkMultiplier = 0.5f;
+
     Material _realMaterial;
     Color _color = Color.white;
     bool _hasColor;
@@ -82,10 +89,29 @@ public class FoodObj : MonoBehaviour
 
     void ClearBlock() => ColonyPalette.ClearTint(meshRenderer);
 
-    public void Clear()
+    public void Clear(Vector3 center, float delay, float duration)
     {
         NotifyDestroyed();
-        Destroy(gameObject);
+
+        if (!gameObject.activeInHierarchy || duration <= 0f)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        transform.SetParent(null, true);
+
+        Vector3 spin = Random.onUnitSphere * spinAngle;
+        Vector3 shrinkScale = transform.localScale * ShrinkMultiplier;
+        float shrink = duration * shrinkPortion;
+
+        Sequence sequence = DOTween.Sequence().SetLink(gameObject);
+
+        sequence.Insert(delay, transform.DOMove(center, duration).SetEase(clearEase));
+        sequence.Insert(delay, transform.DORotate(spin, duration, RotateMode.LocalAxisAdd).SetEase(Ease.Linear));
+        sequence.Insert(delay + duration - shrink, transform.DOScale(shrinkScale, shrink).SetEase(Ease.InQuad));
+
+        sequence.OnComplete(() => Destroy(gameObject));
     }
 
     void NotifyDestroyed()

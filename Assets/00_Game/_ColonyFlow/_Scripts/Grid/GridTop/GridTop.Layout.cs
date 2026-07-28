@@ -32,17 +32,27 @@ public partial class GridTop
         return CellWorld(x, y);
     }
 
-    public bool TryPickCell(Ray ray, out int x, out int y)
+    public bool TryPlanePoint(Ray ray, out Vector3 point)
     {
-        x = -1;
-        y = -1;
+        point = Vector3.zero;
 
         EnsureLayout();
 
         Plane plane = new Plane(Holder.up, Holder.position);
         if (!plane.Raycast(ray, out float distance)) return false;
 
-        Vector3 local = Holder.InverseTransformPoint(ray.GetPoint(distance));
+        point = ray.GetPoint(distance);
+        return true;
+    }
+
+    public bool TryPickCell(Ray ray, out int x, out int y)
+    {
+        x = -1;
+        y = -1;
+
+        if (!TryPlanePoint(ray, out Vector3 world)) return false;
+
+        Vector3 local = Holder.InverseTransformPoint(world);
 
         x = Mathf.RoundToInt((local.x - _originX) / _stepX);
         y = Mathf.RoundToInt((_originZ - local.z) / _stepZ);

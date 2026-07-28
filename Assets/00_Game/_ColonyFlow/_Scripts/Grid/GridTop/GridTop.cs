@@ -11,6 +11,7 @@ public partial class GridTop : MonoBehaviour
     [BoxGroup("Refs")] public HungryDoor hungryDoor;
     [BoxGroup("Refs")] public Transform holder;
     [BoxGroup("Refs")] public Transform hole;
+    [BoxGroup("Refs")] public Transform suckPoint;
 
     [BoxGroup("Grid"), Min(1)] public int gridX = 24;
     [BoxGroup("Grid"), Min(1)] public int gridY = 24;
